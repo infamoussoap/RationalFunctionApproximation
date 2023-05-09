@@ -10,8 +10,11 @@ class EGD(Bernstein, ArmijoSearch, Optimizer):
         on the denominator. Here we only iteratively change the Bernstein coefficients and the Legendre coefficients
         are found using projection
     """
-    def __init__(self, target_function, n, deg=None, num_integration_points=100, tol=1e-10):
-        Bernstein.__init__(self, target_function, n, deg=deg,
+    def __init__(self, target_function, m, n=None, num_integration_points=100, tol=1e-10):
+        """ m is the degree of the denominator
+            n is the degree of the numerator
+        """
+        Bernstein.__init__(self, target_function, m, n=n,
                            num_integration_points=num_integration_points)
         self.tol = tol
 

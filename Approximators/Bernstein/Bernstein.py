@@ -5,21 +5,21 @@ from .utils import combination
 
 
 class Bernstein:
-    def __init__(self, target_function, n, deg=None, num_integration_points=100):
-        """ n is the degree of the denominator
-            deg is the degree of the numerator
+    def __init__(self, target_function, m, n=None, num_integration_points=100):
+        """ m is the degree of the denominator
+            n is the degree of the numerator
         """
         self.target_function = target_function
 
-        self.n = n
-        self.deg = n if deg is None else deg
+        self.m = m
+        self.n = m if n is None else n
 
         self.integration_points = np.linspace(0, 1, num_integration_points)
         self.domain = [self.integration_points[0], self.integration_points[-1]]
 
         self.dx = self.integration_points[1] - self.integration_points[0]
 
-        self.B = self.Bernstein(n, self.integration_points)
+        self.B = self.Bernstein(m, self.integration_points)
 
     def f(self, w, grad=False):
         target_y = self.target_function(self.integration_points) * self.denominator(w)
@@ -35,7 +35,7 @@ class Bernstein:
 
     def numerator(self, w):
         target_y = self.target_function(self.integration_points) * (w @ self.B)
-        P = Legendre.fit(self.integration_points, target_y, deg=self.deg, domain=self.domain)
+        P = Legendre.fit(self.integration_points, target_y, deg=self.n, domain=self.domain)
 
         return P(self.integration_points)
 
