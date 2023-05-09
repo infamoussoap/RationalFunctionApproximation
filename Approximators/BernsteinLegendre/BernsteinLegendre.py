@@ -12,7 +12,7 @@ class BernsteinLegendre:
         self.target_function = target_function
 
         self.m = m
-        self.n = m if m is None else n
+        self.n = m if n is None else n
 
         self.integration_points = np.linspace(0, 1, num_integration_points + 1)
         self.domain = [self.integration_points[0], self.integration_points[-1]]
