@@ -1,2 +1,2 @@
-from CauchySimplex import CauchySimplex
-from EGD import EGD
+from .CauchySimplex import CauchySimplex
+from .EGD import EGD

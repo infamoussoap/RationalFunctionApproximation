@@ -1,8 +1,8 @@
 import numpy as np
 
-from Optimizer import Optimizer
-from ArmijoSearch import ArmijoSearch
-from BernsteinLegendre import BernsteinLegendre
+from .Optimizer import Optimizer
+from .ArmijoSearch import ArmijoSearch
+from .BernsteinLegendre import BernsteinLegendre
 
 
 class EGD(BernsteinLegendre, ArmijoSearch, Optimizer):

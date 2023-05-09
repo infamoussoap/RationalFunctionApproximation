@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.polynomial.legendre import Legendre
 
-from utils import combination
+from .utils import combination
 
 
 class BernsteinLegendre:
