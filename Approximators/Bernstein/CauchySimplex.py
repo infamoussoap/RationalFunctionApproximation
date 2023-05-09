@@ -2,13 +2,13 @@ import numpy as np
 
 from .Optimizer import Optimizer
 from .ArmijoSearch import ArmijoSearch
-from .BernsteinLegendre import BernsteinLegendre
+from .Bernstein import Bernstein
 
 
-class CauchySimplex(BernsteinLegendre, ArmijoSearch, Optimizer):
+class CauchySimplex(Bernstein, ArmijoSearch, Optimizer):
     def __init__(self, target_function, n, deg=None, num_integration_points=100, tol=1e-10):
-        BernsteinLegendre.__init__(self, target_function, n, deg=deg,
-                                   num_integration_points=num_integration_points)
+        Bernstein.__init__(self, target_function, n, deg=deg,
+                           num_integration_points=num_integration_points)
         self.tol = tol
 
     def update(self, x, d, step_size):

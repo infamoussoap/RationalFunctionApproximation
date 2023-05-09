@@ -4,7 +4,11 @@ from numpy.polynomial.legendre import Legendre
 from .utils import combination
 
 
-class BernsteinLegendre:
+class Bernstein:
+    """ Rational function approximation using Legendre polynomials on the numerator and Bernstein polynomials
+        on the denominator. Here we only iteratively change the Bernstein coefficients and the Legendre coefficients
+        are found using projection
+    """
     def __init__(self, target_function, n, deg=None, num_integration_points=100):
         """ n is the degree of the denominator
             deg is the degree of the numerator
