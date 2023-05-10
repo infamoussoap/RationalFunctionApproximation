@@ -3,12 +3,11 @@ from abc import ABC
 from numpy.polynomial.legendre import Legendre
 
 from .ArmijoSearch import ArmijoSearch
-from .Optimizer import Optimizer
 
 from .utils import BernsteinPolynomial, check_w
 
 
-class Approximator(ArmijoSearch, Optimizer, ABC):
+class Approximator(ArmijoSearch, ABC):
     def __init__(self):
         self.w = None
         self.m = None

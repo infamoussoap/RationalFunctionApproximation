@@ -27,11 +27,11 @@ class EGD(Approximator, Bernstein):
 
         self.n_iter_ = None
 
-    def update(self, x, d, step_size):
+    def _update(self, x, d, step_size):
         z = x * np.exp(-step_size * d)
         return z / np.sum(z)
 
-    def search(self, target_function, c1=1e-4, c2=0.5, line_search_iter=100, step_size=1):
+    def _search(self, target_function, c1=1e-4, c2=0.5, line_search_iter=100, step_size=1):
         f = partial(self.f, target_function)
 
         d = f(self.w, grad=True)
@@ -39,7 +39,7 @@ class EGD(Approximator, Bernstein):
         step_size = self.backtracking_armijo_line_search(f, self.w, d, step_size,
                                                          c1=c1, c2=c2, max_iter=line_search_iter)
 
-        return self.update(self.w, d, step_size)
+        return self._update(self.w, d, step_size)
 
     def fit(self, target_function, max_iter=100, stopping_tol=1e-6, w=None,
             c1=1e-4, c2=0.5, line_search_iter=100, step_size=1, verbose=False):
@@ -50,7 +50,7 @@ class EGD(Approximator, Bernstein):
         while self.n_iter_ < max_iter and np.linalg.norm(w_old - self.w) > stopping_tol:
             w_old = self.w.copy()
 
-            self.w = self.search(target_function, c1=c1, c2=c2, line_search_iter=line_search_iter, step_size=step_size)
+            self.w = self._search(target_function, c1=c1, c2=c2, line_search_iter=line_search_iter, step_size=step_size)
             self.legendre_coef = self._legendre_coef(target_function, self.w)
 
             self.n_iter_ += 1
