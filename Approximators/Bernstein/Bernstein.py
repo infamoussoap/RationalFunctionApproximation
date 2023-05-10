@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.polynomial.legendre import Legendre
 
-from .utils import combination, spacing, BernsteinPolynomial
+from .utils import spacing, BernsteinPolynomial, LegendrePolynomial
 
 
 class Bernstein:
@@ -19,27 +19,29 @@ class Bernstein:
         self.dx = integration_points[1:] - integration_points[:-1]
 
         self.B = BernsteinPolynomial(m, self.integration_points)
+        self.P = LegendrePolynomial(n, self.integration_points)
 
     def f(self, target_function, w, grad=False):
-        legendre_coef = self._legendre_coef(target_function, w)
-        target_y = target_function(self.integration_points) * self._denominator(w, self.integration_points)
+        target_y = target_function(self.integration_points) * self._denominator(w)
+        legendre_coef = self._legendre_coef(target_function, w, target_y=target_y)
 
-        z = target_y - self._numerator(legendre_coef, self.integration_points)
+        z = target_y - self._numerator(legendre_coef)
 
         if grad:
             return self.B @ (z * target_function(self.integration_points))
 
         return (z ** 2) @ self.dx
 
-    def _denominator(self, w, eval_points):
-        return w @ BernsteinPolynomial(self.m, eval_points)
+    def _denominator(self, w):
+        return w @ self.B
 
-    @staticmethod
-    def _numerator(legendre_coef, eval_points):
-        return Legendre(legendre_coef, domain=[0, 1])(eval_points)
+    def _numerator(self, legendre_coef):
+        return legendre_coef @ self.P
 
-    def _legendre_coef(self, target_function, w):
-        target_y = target_function(self.integration_points) * self._denominator(w, self.integration_points)
+    def _legendre_coef(self, target_function, w, target_y=None):
+        if target_y is None:
+            target_y = target_function(self.integration_points) * self._denominator(w)
+
         model = Legendre.fit(self.integration_points, target_y, deg=self.n, domain=self.domain)
 
         return model.coef

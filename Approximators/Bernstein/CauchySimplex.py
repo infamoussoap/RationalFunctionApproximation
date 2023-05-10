@@ -7,7 +7,7 @@ from .Optimizer import Optimizer
 from .ArmijoSearch import ArmijoSearch
 from .Bernstein import Bernstein
 
-from .utils import check_w
+from .utils import check_w, BernsteinPolynomial
 
 
 class CauchySimplex(Bernstein, ArmijoSearch, Optimizer):
@@ -82,8 +82,10 @@ class CauchySimplex(Bernstein, ArmijoSearch, Optimizer):
 
     @property
     def denominator(self):
-        return partial(self._denominator, self.w)
+        def f(eval_points):
+            return self.w @ BernsteinPolynomial(self.m, eval_points)
+        return f
 
     @property
     def numerator(self):
-        return partial(self._numerator, self.legendre_coef)
+        return Legendre(self.legendre_coef, domain=[0, 1])

@@ -1,5 +1,9 @@
 import numpy as np
-from scipy.special import gammaln
+from scipy.special import gammaln, eval_legendre
+
+
+def LegendrePolynomial(n, x):
+    return np.vstack([eval_legendre(i, 2 * x - 1) for i in range(n + 1)])
 
 
 def BernsteinPolynomial(n, x):
