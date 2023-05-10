@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.polynomial.legendre import Legendre
 
-from .utils import combination, spacing
+from .utils import combination, spacing, BernsteinPolynomial
 
 
 class Bernstein:
@@ -20,7 +20,7 @@ class Bernstein:
 
         self.dx = integration_points[1:] - integration_points[:-1]
 
-        self.B = self.Bernstein(m, self.integration_points)
+        self.B = BernsteinPolynomial(m, self.integration_points)
 
     def f(self, w, grad=False):
         target_y = self.target_function(self.integration_points) * self.denominator(w)
@@ -39,20 +39,3 @@ class Bernstein:
         P = Legendre.fit(self.integration_points, target_y, deg=self.n, domain=self.domain)
 
         return P(self.integration_points)
-
-    @staticmethod
-    def Bernstein(n, x):
-        # assert x[0] == 0 and x[-1] == 1
-
-        k = np.arange(0, n + 1)
-        log_B = np.zeros((n + 1, len(x)))
-
-        log_B += combination(n, k, as_log=True)[:, None]
-        log_B[:, 1:] += k[:, None] * np.log(x[None, 1:])
-        log_B[:, :-1] += (n - k[:, None]) * np.log(1 - x[None, :-1])
-
-        log_B[1:, 0] = -np.inf
-        log_B[:-1, -1] = -np.inf
-
-        B = np.exp(log_B)
-        return B

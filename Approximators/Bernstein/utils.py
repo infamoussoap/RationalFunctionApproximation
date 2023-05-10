@@ -2,6 +2,23 @@ import numpy as np
 from scipy.special import gammaln
 
 
+def BernsteinPolynomial(n, x):
+    # assert x[0] == 0 and x[-1] == 1
+
+    k = np.arange(0, n + 1)
+    log_B = np.zeros((n + 1, len(x)))
+
+    log_B += combination(n, k, as_log=True)[:, None]
+    log_B[:, 1:] += k[:, None] * np.log(x[None, 1:])
+    log_B[:, :-1] += (n - k[:, None]) * np.log(1 - x[None, :-1])
+
+    log_B[1:, 0] = -np.inf
+    log_B[:-1, -1] = -np.inf
+
+    B = np.exp(log_B)
+    return B
+
+
 def combination(n, k, as_log=False):
     if as_log:
         return gammaln(n + 1) - gammaln(n - k + 1) - gammaln(k + 1)
