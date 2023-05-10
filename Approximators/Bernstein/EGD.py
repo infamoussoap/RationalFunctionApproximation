@@ -37,7 +37,7 @@ class EGD(Approximator, Bernstein, ArmijoSearch, Optimizer):
         f = partial(self.f, target_function)
 
         d = f(self.w, grad=True)
-        
+
         step_size = self.backtracking_armijo_line_search(f, self.w, d, step_size,
                                                          c1=c1, c2=c2, max_iter=line_search_iter)
 
