@@ -2,15 +2,13 @@ import numpy as np
 
 from functools import partial
 
-from .Optimizer import Optimizer
-from .ArmijoSearch import ArmijoSearch
 from .Bernstein import Bernstein
 from .Approximator import Approximator
 
 from .utils import check_w
 
 
-class EGD(Approximator, Bernstein, ArmijoSearch, Optimizer):
+class EGD(Approximator, Bernstein):
     """ Rational function approximation using Legendre polynomials on the numerator and Bernstein polynomials
         on the denominator. Here we only iteratively change the Bernstein coefficients and the Legendre coefficients
         are found using projection
