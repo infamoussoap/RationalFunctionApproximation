@@ -7,6 +7,9 @@ from .Approximator import Approximator
 
 from .utils import check_w
 
+from ..WriteToScreen import WriterToScreen
+import warnings
+
 
 class CauchySimplex(Approximator, Bernstein):
     """ Rational function approximation using Legendre polynomials on the numerator and Bernstein polynomials
@@ -30,6 +33,8 @@ class CauchySimplex(Approximator, Bernstein):
         self.legendre_coef = None
 
         self.n_iter_ = None
+
+        self.writer = WriterToScreen()
 
     def _update(self, x, d, step_size):
         z = x - step_size * d
@@ -65,7 +70,14 @@ class CauchySimplex(Approximator, Bernstein):
             self.n_iter_ += 1
 
             if verbose:
-                print(f"{self.n_iter_}: {self.f(target_function, self.w)}")
+                self.writer.write(f"{self.n_iter_}: {self.f(target_function, self.w)}", header='\r')
+
+        if verbose:
+            print()
+
+        if self.n_iter_ == max_iter:
+            warnings.warn("Maximum number of iterations has been reached and convergence is not guaranteed. "
+                          "Try increasing `max_iter` or decreasing `stopping_tol`.")
 
         return self
 
