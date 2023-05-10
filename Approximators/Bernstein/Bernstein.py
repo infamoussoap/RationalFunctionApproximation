@@ -23,8 +23,8 @@ class Bernstein:
         self.B = BernsteinPolynomial(m, self.integration_points)
 
     def f(self, w, grad=False):
-        target_y = self.target_function(self.integration_points) * self.denominator(w)
-        z = target_y - self.numerator(w)
+        target_y = self.target_function(self.integration_points) * self.denominator(w)(self.integration_points)
+        z = target_y - self.numerator(w)(self.integration_points)
 
         if grad:
             return self.B @ (z * self.target_function(self.integration_points))
@@ -32,10 +32,12 @@ class Bernstein:
         return (z ** 2) @ self.dx
 
     def denominator(self, w):
-        return w @ self.B
+        def f(eval_points):
+            return w @ BernsteinPolynomial(self.m, eval_points)
+        return f
 
     def numerator(self, w):
         target_y = self.target_function(self.integration_points) * (w @ self.B)
         P = Legendre.fit(self.integration_points, target_y, deg=self.n, domain=self.domain)
 
-        return P(self.integration_points)
+        return P
