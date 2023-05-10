@@ -3,19 +3,21 @@ from scipy.special import gammaln
 
 
 def BernsteinPolynomial(n, x):
-    # assert x[0] == 0 and x[-1] == 1
+    working_mask = (x != 0) * (x != 1)
 
     k = np.arange(0, n + 1)
     log_B = np.zeros((n + 1, len(x)))
 
-    log_B += combination(n, k, as_log=True)[:, None]
-    log_B[:, 1:] += k[:, None] * np.log(x[None, 1:])
-    log_B[:, :-1] += (n - k[:, None]) * np.log(1 - x[None, :-1])
+    log_B[:, working_mask] += combination(n, k, as_log=True)[:, None]
+    log_B[:, working_mask] += k[:, None] * np.log(x[None, working_mask])
+    log_B[:, working_mask] += (n - k[:, None]) * np.log(1 - x[None, working_mask])
 
-    log_B[1:, 0] = -np.inf
-    log_B[:-1, -1] = -np.inf
+    B = np.exp(log_B) * working_mask[None, :]
 
-    B = np.exp(log_B)
+    # Edge cases
+    B[0, x == 0] = 1
+    B[n, x == 1] = 1
+
     return B
 
 
