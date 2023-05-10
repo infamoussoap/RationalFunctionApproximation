@@ -66,7 +66,7 @@ class CauchySimplex(Approximator, BernsteinLegendre):
             self.n_iter_ += 1
 
             if verbose:
-                self.writer.write(f"{self.n_iter_}: {self.f(target_function, self.w)}", header='\r')
+                self.writer.write(f"{self.n_iter_}: {self.f(target_function, self.x)}", header='\r')
 
         if verbose:
             print()
