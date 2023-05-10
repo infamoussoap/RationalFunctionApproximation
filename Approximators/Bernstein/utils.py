@@ -49,3 +49,10 @@ def spacing(spacing_type='linear', n_points=100):
         return (np.cos(np.linspace(-np.pi, np.pi, n_points)) + 1) / 2
 
     raise ValueError("Invalid spacing_type. Select one from ['linear', 'chebyshev']")
+
+
+def check_w(w, correct_length):
+    assert np.sum(w) == 1 and np.all(w > 0), "w must sum to one and have all positive indices"
+    assert len(w) == correct_length, f"w must have length {correct_length}"
+
+    return w
