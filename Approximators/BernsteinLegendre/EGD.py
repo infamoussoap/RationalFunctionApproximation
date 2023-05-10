@@ -66,7 +66,7 @@ class EGD(Approximator, BernsteinLegendre):
 
         if self.n_iter_ == max_iter:
             warnings.warn("Maximum number of iterations has been reached and convergence is not guaranteed. "
-                          "Try increasing `max_iter` or decreasing `stopping_tol`.")
+                          "Try increasing `max_iter` or increasing `stopping_tol`.")
 
         return self
 
