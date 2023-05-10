@@ -1,50 +1,42 @@
 import numpy as np
-from scipy.special import eval_legendre
+from numpy.polynomial.legendre import Legendre
 
-from .utils import BernsteinPolynomial
+from .utils import spacing
+from .utils import BernsteinPolynomial, LegendrePolynomial
 
 
 class BernsteinLegendre:
-    def __init__(self, target_function, m, n=None, num_integration_points=100):
+    def __init__(self, m, n=None, num_integration_points=100, spacing_type='linear'):
         """ m is the degree of the denominator
             n is the degree of the numerator
         """
-        self.target_function = target_function
-
         self.m = m
         self.n = m if n is None else n
 
-        self.integration_points = np.linspace(0, 1, num_integration_points + 1)
-        self.domain = [self.integration_points[0], self.integration_points[-1]]
+        integration_points = spacing(spacing_type=spacing_type, n_points=num_integration_points)
+        self.integration_points = integration_points[:-1]
+        self.domain = [0, 1]
 
-        self.dx = self.integration_points[1] - self.integration_points[0]
+        self.dx = integration_points[1:] - integration_points[:-1]
 
         self.B = BernsteinPolynomial(m, self.integration_points)
-        self.P = self.Legendre(n, self.integration_points)
+        self.P = LegendrePolynomial(n, self.integration_points)
 
-    def f(self, x, grad=False):
-        w, c = x[:self.m + 1], x[self.m + 1:]
-
-        target_values = self.target_function(self.integration_points)
-        R = target_values * self.denominator(w)(self.integration_points) - self.numerator(c)(self.integration_points)
+    def f(self, target_function, x, grad=False):
+        target_values = target_function(self.integration_points)
+        R = target_values * self._denominator(x) - self._numerator(x)
 
         if grad:
-            dL_dw = self.B @ (R * target_values) * self.dx
-            dL_dc = -self.P @ R * self.dx
+            dL_dw = (self.dx * self.B) @ (R * target_values)  # Might need to be scaled by dx
+            dL_dc = (self.dx * -self.P) @ R
             return np.concatenate([dL_dw, dL_dc])
 
-        return np.sum(R ** 2) * self.dx
+        return (R ** 2) @ self.dx
 
-    def denominator(self, w):
-        def f(eval_points):
-            return w @ BernsteinPolynomial(self.m, eval_points)
-        return f
+    def _denominator(self, x):
+        w = x[:self.m + 1]
+        return w @ self.B
 
-    def numerator(self, c):
-        def f(eval_points):
-            return c @ self.Legendre(self.n, eval_points)
-        return f
-
-    @staticmethod
-    def Legendre(n, integration_points):
-        return np.vstack([eval_legendre(i, 2 * integration_points - 1) for i in range(n + 1)])
+    def _numerator(self, x):
+        legendre_coef = x[self.m + 1:]
+        return legendre_coef @ self.P

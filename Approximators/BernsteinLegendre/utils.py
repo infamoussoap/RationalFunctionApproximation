@@ -1,5 +1,9 @@
 import numpy as np
-from scipy.special import gammaln
+from scipy.special import gammaln, eval_legendre
+
+
+def LegendrePolynomial(n, x):
+    return np.vstack([eval_legendre(i, 2 * x - 1) for i in range(n + 1)])
 
 
 def BernsteinPolynomial(n, x):
@@ -40,3 +44,27 @@ def safe_log(x):
     out[mask] = np.log(x[mask])
 
     return out
+
+
+def spacing(spacing_type='linear', n_points=100):
+    if spacing_type.lower() == 'linear':
+        return np.linspace(0, 1, n_points)
+    elif spacing_type.lower() == 'chebyshev':
+        return (np.cos(np.linspace(-np.pi, np.pi, n_points)) + 1) / 2
+
+    raise ValueError("Invalid spacing_type. Select one from ['linear', 'chebyshev']")
+
+
+def check_x(x, correct_w_length, correct_coef_length):
+    if x is None:
+        w = np.ones(correct_w_length) / correct_w_length
+        coef = np.ones(correct_coef_length)
+        return np.concatenate((w, coef))
+
+    w = x[:correct_w_length]
+
+    assert np.sum(w) == 1 and np.all(w > 0), "w must sum to one and have all positive indices"
+    assert len(x) == correct_w_length + correct_coef_length, \
+        f"x must have length {correct_w_length + correct_coef_length}"
+
+    return x

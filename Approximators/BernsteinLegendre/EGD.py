@@ -1,21 +1,27 @@
 import numpy as np
 
-from .ArmijoSearch import ArmijoSearch
-from .Optimizer import Optimizer
+from functools import partial
+
+from .Approximator import Approximator
 from .BernsteinLegendre import BernsteinLegendre
 
+from .utils import check_x
 
-class EGD(BernsteinLegendre, ArmijoSearch, Optimizer):
+
+class EGD(Approximator, BernsteinLegendre):
     """ Rational function approximation using Legendre polynomials on the numerator and Bernstein polynomials
         on the denominator. Here we iteratively change the Bernstein coefficients and the Legendre coefficients
     """
-    def __init__(self, target_function, m, n=None, num_integration_points=100, tol=1e-10):
-        BernsteinLegendre.__init__(self, target_function, m, n=n,
-                                   num_integration_points=num_integration_points)
+    def __init__(self, m, n=None, num_integration_points=100, tol=1e-10, spacing_type='linear'):
+        Approximator.__init__(self)
+        BernsteinLegendre.__init__(self, m, n=n,
+                                   num_integration_points=num_integration_points, spacing_type=spacing_type)
         self.tol = tol
+        self.x = None
+        self.n_iter_ = None
 
-    def update(self, x, d, step_size):
-        w, c = x[:self.m + 1], x[self.m + 1:]
+    def _update(self, x, d, step_size):
+        w, c = self.w, self.legendre_coef
         dw_dt, dL_dc = d[:self.m + 1], d[self.m + 1:]
 
         w = w * np.exp(-step_size * dw_dt)
@@ -25,14 +31,37 @@ class EGD(BernsteinLegendre, ArmijoSearch, Optimizer):
 
         return np.concatenate([w, c])
 
-    def search(self, x, step_size=1, c1=1e-4, c2=0.5, max_iter=100):
-        grad = self.f(x, grad=True)
+    def _search(self, target_function, c1=1e-4, c2=0.5, line_search_iter=100, step_size=1):
+        f = partial(self.f, target_function)
+        grad = f(self.x, grad=True)
 
-        w = x[:self.m + 1]
-        dL_dw = grad[:self.m + 1]
+        step_size = self.backtracking_armijo_line_search(f, self.x, grad, step_size,
+                                                         c1=c1, c2=c2, max_iter=line_search_iter)
 
-        grad[:self.m + 1] = w * (dL_dw - w @ dL_dw)
-        step_size = self.backtracking_armijo_line_search(x, grad, step_size,
-                                                         c1=c1, c2=c2, max_iter=max_iter)
+        return self._update(self.x, grad, step_size)
 
-        return self.update(x, grad, step_size)
+    def fit(self, target_function, max_iter=100, stopping_tol=1e-6, x=None,
+            c1=1e-4, c2=0.5, line_search_iter=100, step_size=1, verbose=False):
+        self.x = check_x(x, self.m + 1, self.n + 1)
+
+        w_old = 1  # Needs to be large enough so the while loop starts
+        self.n_iter_ = 0
+        while self.n_iter_ < max_iter and np.linalg.norm(w_old - self.w) > stopping_tol:
+            w_old = self.w.copy()
+
+            self.x = self._search(target_function, c1=c1, c2=c2, line_search_iter=line_search_iter, step_size=step_size)
+
+            self.n_iter_ += 1
+
+            if verbose:
+                print(f"{self.n_iter_}: {self.f(target_function, self.w)}")
+
+        return self
+
+    @property
+    def w(self):
+        return self.x[:self.m + 1]
+
+    @property
+    def legendre_coef(self):
+        return self.x[self.m + 1:]
