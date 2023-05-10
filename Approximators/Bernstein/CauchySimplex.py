@@ -1,16 +1,16 @@
 import numpy as np
-from numpy.polynomial.legendre import Legendre
 
 from functools import partial
 
 from .Optimizer import Optimizer
 from .ArmijoSearch import ArmijoSearch
 from .Bernstein import Bernstein
+from .Approximator import Approximator
 
-from .utils import check_w, BernsteinPolynomial
+from .utils import check_w
 
 
-class CauchySimplex(Bernstein, ArmijoSearch, Optimizer):
+class CauchySimplex(Approximator, Bernstein, ArmijoSearch, Optimizer):
     """ Rational function approximation using Legendre polynomials on the numerator and Bernstein polynomials
         on the denominator. Here we only iteratively change the Bernstein coefficients and the Legendre coefficients
         are found using projection
@@ -23,6 +23,7 @@ class CauchySimplex(Bernstein, ArmijoSearch, Optimizer):
             n is the degree of the numerator
             m is the degree of the denominator
         """
+        Approximator.__init__(self)
         Bernstein.__init__(self, m, n=n,
                            num_integration_points=num_integration_points, spacing_type=spacing_type)
         self.tol = tol
@@ -53,7 +54,7 @@ class CauchySimplex(Bernstein, ArmijoSearch, Optimizer):
 
     def fit(self, target_function, max_iter=100, stopping_tol=1e-6, w=None,
             c1=1e-4, c2=0.5, line_search_iter=100, gamma=1, verbose=False):
-        self.w = np.ones(self.m + 1) / (self.m + 1) if w is None else check_w(w, self.m + 1)
+        self.w = check_w(w, self.m + 1)
 
         w_old = 1  # Needs to be large enough so the while loop starts
         self.n_iter_ = 0
@@ -76,16 +77,3 @@ class CauchySimplex(Bernstein, ArmijoSearch, Optimizer):
 
         diff = np.max(grad[support]) - x @ grad
         return 1 / diff if diff > 1e-6 else 1e6
-
-    def reset(self, w=None):
-        self.w = np.ones(self.m + 1) / (self.m + 1) if w is None else check_w(w, self.m + 1)
-
-    @property
-    def denominator(self):
-        def f(eval_points):
-            return self.w @ BernsteinPolynomial(self.m, eval_points)
-        return f
-
-    @property
-    def numerator(self):
-        return Legendre(self.legendre_coef, domain=[0, 1])
