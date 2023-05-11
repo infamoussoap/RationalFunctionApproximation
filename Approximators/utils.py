@@ -50,12 +50,22 @@ def spacing(spacing_type='linear', n_points=100):
     if spacing_type.lower() == 'linear':
         return np.linspace(0, 1, n_points)
     elif spacing_type.lower() == 'chebyshev':
-        return (np.cos(np.linspace(-np.pi, np.pi, n_points)) + 1) / 2
+        return (np.cos(np.linspace(np.pi, 0, n_points)) + 1) / 2
 
     raise ValueError("Invalid spacing_type. Select one from ['linear', 'chebyshev']")
 
 
-def check_x(x, correct_w_length, correct_coef_length):
+def check_bernstein_w(w, correct_length):
+    if w is None:
+        return np.ones(correct_length) / correct_length
+
+    assert np.sum(w) == 1 and np.all(w > 0), "w must sum to one and have all positive indices"
+    assert len(w) == correct_length, f"w must have length {correct_length}"
+
+    return w
+
+
+def check_bernstein_legendre_x(x, correct_w_length, correct_coef_length):
     if x is None:
         w = np.ones(correct_w_length) / correct_w_length
         coef = np.ones(correct_coef_length)

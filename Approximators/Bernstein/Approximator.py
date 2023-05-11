@@ -4,7 +4,7 @@ from numpy.polynomial.legendre import Legendre
 
 from .ArmijoSearch import ArmijoSearch
 
-from .utils import BernsteinPolynomial, check_w
+from ..utils import BernsteinPolynomial, check_bernstein_w
 
 
 class Approximator(ArmijoSearch, ABC):
@@ -25,4 +25,4 @@ class Approximator(ArmijoSearch, ABC):
         return Legendre(self.legendre_coef, domain=[0, 1])
 
     def reset(self, w=None):
-        self.w = check_w(w, self.m + 1)
+        self.w = check_bernstein_w(w, self.m + 1)

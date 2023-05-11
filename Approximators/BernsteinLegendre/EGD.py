@@ -5,7 +5,7 @@ from functools import partial
 from .Approximator import Approximator
 from .BernsteinLegendre import BernsteinLegendre
 
-from .utils import check_x
+from ..utils import check_bernstein_legendre_x
 
 from ..WriteToScreen import WriterToScreen
 import warnings
@@ -47,7 +47,7 @@ class EGD(Approximator, BernsteinLegendre):
 
     def fit(self, target_function, max_iter=100, stopping_tol=1e-6, x=None,
             c1=1e-4, c2=0.5, line_search_iter=100, step_size=1, verbose=False):
-        self.x = check_x(x, self.m + 1, self.n + 1)
+        self.x = check_bernstein_legendre_x(x, self.m + 1, self.n + 1)
 
         w_old = 1  # Needs to be large enough so the while loop starts
         self.n_iter_ = 0

@@ -5,7 +5,7 @@ from functools import partial
 from .Bernstein import Bernstein
 from .Approximator import Approximator
 
-from .utils import check_w
+from ..utils import check_bernstein_w
 
 from ..WriteToScreen import WriterToScreen
 import warnings
@@ -57,7 +57,7 @@ class CauchySimplex(Approximator, Bernstein):
 
     def fit(self, target_function, max_iter=100, stopping_tol=1e-6, w=None,
             c1=1e-4, c2=0.5, line_search_iter=100, gamma=1, verbose=False):
-        self.w = check_w(w, self.m + 1)
+        self.w = check_bernstein_w(w, self.m + 1)
 
         w_old = 1  # Needs to be large enough so the while loop starts
         self.n_iter_ = 0
