@@ -131,4 +131,7 @@ class RationalFunction(Approximator, Bernstein):
         return 1 / diff if diff > 1e-6 else 1e6
 
     def __call__(self, evaluation_points):
+        if self.w is None:
+            return np.zeros_like(evaluation_points)
+
         return self.numerator(evaluation_points) / self.denominator(evaluation_points) + self.intercept_

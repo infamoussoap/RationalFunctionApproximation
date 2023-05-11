@@ -23,7 +23,7 @@ class GAMRegressor:
         self.n_features_in_ = X.shape[1]
         self.intercept_ = np.mean(y)
 
-        self._learner_functions = [Zeros() for _ in range(self.n_features_in_)]
+        self._learner_functions = [RationalFunction(self.n, self.m, X[:, i]) for i in range(self.n_features_in_)]
 
         for count in range(num_rounds):
             self._fit(X, y, max_iter=max_iter, stopping_tol=stopping_tol, w=w, c1=c1, c2=c2,
@@ -41,11 +41,8 @@ class GAMRegressor:
             target_y = y - self.intercept_ - np.sum([f(X[:, j])
                                                      for j, f in enumerate(self._learner_functions) if j != i], axis=0)
 
-            learner_function = RationalFunction(self.n, self.m, X[:, i])
-            learner_function.fit(target_y, max_iter=max_iter, stopping_tol=stopping_tol, w=w, c1=c1, c2=c2,
-                                 line_search_iter=line_search_iter, gamma=gamma)
-
-            self._learner_functions[i] = learner_function
+            self._learner_functions[i].fit(target_y, max_iter=max_iter, stopping_tol=stopping_tol, w=w, c1=c1, c2=c2,
+                                           line_search_iter=line_search_iter, gamma=gamma)
 
     def predict(self, X):
         return np.sum([f(X[:, j]) for j, f in enumerate(self._learner_functions)], axis=0) + self.intercept_
