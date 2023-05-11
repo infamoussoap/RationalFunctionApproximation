@@ -19,13 +19,13 @@ class CauchySimplex(Approximator, Bernstein):
         n_iter_
             Number of iterations run by the coordinate descent solver to reach the specified tolerance
     """
-    def __init__(self, m, n=None, num_integration_points=100, tol=1e-10, spacing_type='linear'):
+    def __init__(self, n, m=None, num_integration_points=100, tol=1e-10, spacing_type='linear'):
         """
             n is the degree of the numerator
             m is the degree of the denominator
         """
         Approximator.__init__(self)
-        Bernstein.__init__(self, m, n=n,
+        Bernstein.__init__(self, n, m=m,
                            num_integration_points=num_integration_points, spacing_type=spacing_type)
         self.tol = tol
 

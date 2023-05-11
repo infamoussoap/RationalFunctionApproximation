@@ -15,9 +15,9 @@ class CauchySimplex(Approximator, BernsteinLegendre):
     """ Rational function approximation using Legendre polynomials on the numerator and Bernstein polynomials
         on the denominator. Here we iteratively change the Bernstein coefficients and the Legendre coefficients
     """
-    def __init__(self, m, n=None, num_integration_points=100, tol=1e-10, spacing_type='linear'):
+    def __init__(self, n, m=None, num_integration_points=100, tol=1e-10, spacing_type='linear'):
         Approximator.__init__(self)
-        BernsteinLegendre.__init__(self, m, n=n,
+        BernsteinLegendre.__init__(self, n, m=m,
                                    num_integration_points=num_integration_points, spacing_type=spacing_type)
         self.tol = tol
         self.x = None

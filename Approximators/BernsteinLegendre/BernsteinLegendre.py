@@ -6,12 +6,12 @@ from .utils import BernsteinPolynomial, LegendrePolynomial
 
 
 class BernsteinLegendre:
-    def __init__(self, m, n=None, num_integration_points=100, spacing_type='linear'):
+    def __init__(self, n, m=None, num_integration_points=100, spacing_type='linear'):
         """ m is the degree of the denominator
             n is the degree of the numerator
         """
-        self.m = m
-        self.n = m if n is None else n
+        self.n = n
+        self.m = n if m is None else m
 
         integration_points = spacing(spacing_type=spacing_type, n_points=num_integration_points)
         self.integration_points = integration_points[:-1]
