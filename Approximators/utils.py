@@ -46,10 +46,18 @@ def safe_log(x):
     return out
 
 
-def spacing(spacing_type='linear', n_points=100):
-    if spacing_type.lower() == 'linear':
+def spacing_grid(spacing='linear', n_points=100):
+    if isinstance(spacing, np.ndarray):
+        assert len(spacing) > 1, "Grid spacing must have at least length 2"
+
+        spacing.sort()
+        assert 0 <= spacing[0] and spacing[-1] <= 1, "The evaluation points of the integral must be between [0, 1]"
+
+        return spacing
+
+    if spacing.lower() == 'linear':
         return np.linspace(0, 1, n_points)
-    elif spacing_type.lower() == 'chebyshev':
+    elif spacing.lower() == 'chebyshev':
         return (np.cos(np.linspace(np.pi, 0, n_points)) + 1) / 2
 
     raise ValueError("Invalid spacing_type. Select one from ['linear', 'chebyshev']")

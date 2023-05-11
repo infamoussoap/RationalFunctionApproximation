@@ -1,17 +1,17 @@
 from numpy.polynomial.legendre import Legendre
 
-from ..utils import spacing, BernsteinPolynomial, LegendrePolynomial
+from ..utils import spacing_grid, BernsteinPolynomial, LegendrePolynomial
 
 
 class Bernstein:
-    def __init__(self, n, m=None, num_integration_points=100, spacing_type='linear'):
+    def __init__(self, n, m=None, num_integration_points=100, spacing='linear'):
         """ m is the degree of the denominator
             n is the degree of the numerator
         """
         self.n = n
         self.m = n if m is None else m
 
-        integration_points = spacing(spacing_type=spacing_type, n_points=num_integration_points)
+        integration_points = spacing_grid(spacing=spacing, n_points=num_integration_points)
         self.integration_points = integration_points[:-1]
         self.domain = [0, 1]
 

@@ -33,7 +33,7 @@ class CauchySimplex(Approximator, Bernstein):
         _writer : WriterToScreen
             Used to write to screen for verbose
     """
-    def __init__(self, n, m=None, num_integration_points=100, tol=1e-10, spacing_type='linear'):
+    def __init__(self, n, m=None, num_integration_points=100, tol=1e-10, spacing='linear'):
         """ Initialize Cauchy Simplex Optimizer
 
             Parameters
@@ -46,12 +46,12 @@ class CauchySimplex(Approximator, Bernstein):
                 The number of points to evaluate the integrand at
             tol : float, default=1e-10
                 Tolerance for the zero set
-            spacing_type : {'linear', 'chebyshev'}, default='linear'
+            spacing : {'linear', 'chebyshev'} or np.ndarray, default='linear'
                 How the discretization of the integral is to be made.
         """
         Approximator.__init__(self)
         Bernstein.__init__(self, n, m=m,
-                           num_integration_points=num_integration_points, spacing_type=spacing_type)
+                           num_integration_points=num_integration_points, spacing=spacing)
         self.tol = tol
 
         self.w = None
