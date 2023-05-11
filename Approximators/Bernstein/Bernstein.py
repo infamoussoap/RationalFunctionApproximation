@@ -28,7 +28,7 @@ class Bernstein:
         z = target_y - self._numerator(legendre_coef)
 
         if grad:
-            return self.B @ (z * target_function(self.integration_points))
+            return (self.dx[None, :] * self.B) @ (z * target_function(self.integration_points))
 
         return (z ** 2) @ self.dx
 
