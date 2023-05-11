@@ -87,6 +87,35 @@ class RationalFunction(Approximator, Bernstein):
 
     def fit(self, y, max_iter=100, stopping_tol=1e-6, w=None,
             c1=1e-4, c2=0.5, line_search_iter=100, gamma=0.9):
+        """ Fits a rational polynomial to the given datapoints
+
+            Parameters
+            ----------
+            y : (k, ) np.ndarray
+                Target values to be fitted against
+            max_iter : int, default=100
+                The number of iterations to perform the optimization
+            stopping_tol : float, default=1e-6
+                The tolerance for the stopping criteria. If |w_prev - w_new| < stopping_tol
+                then the iteration will stop
+            w : (m + 1, ) np.ndarray, default=None
+                The starting point for optimization. If None is given then it will default
+                to (np.ones(m + 1) / (m + 1).
+            c1 : float, default=1e-4
+                Parameter for the armijo line search
+            c2 : float, default=0.5
+                Parameter for the armijo line search
+            line_search_iter : int, default=100
+                Number of iterations for the line search
+            gamma : float, default=0.9
+                Expected to be a float between [0, 1]. It represents the percent of the maximum step size
+                to be taken
+
+            Returns
+            -------
+            self : object
+                Fitted rational polynomial
+        """
         self.w = check_bernstein_w(w, self.m + 1)
 
         w_old = 1  # Needs to be large enough so the while loop starts
