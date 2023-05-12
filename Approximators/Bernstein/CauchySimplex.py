@@ -152,6 +152,10 @@ class CauchySimplex(Approximator, Bernstein):
         """
         self.w = check_bernstein_w(w, self.m + 1)
 
+        if len(self.w) == 1:
+            self.legendre_coef = self._legendre_coef(target_function, self.w)
+            return self
+
         w_old = 1  # Needs to be large enough so the while loop starts
         self.n_iter_ = 0
         while self.n_iter_ < max_iter and np.linalg.norm(w_old - self.w) > stopping_tol:
