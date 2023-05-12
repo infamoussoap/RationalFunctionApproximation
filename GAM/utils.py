@@ -86,3 +86,34 @@ def check_bernstein_legendre_x(x, correct_w_length, correct_coef_length):
         f"x must have length {correct_w_length + correct_coef_length}"
 
     return x
+
+
+def check_rational_degrees(rational_degrees, length):
+    if is_container_of_ints(rational_degrees, 2):
+        return [rational_degrees] * length
+    else:
+        try:
+            valid_format = all([is_container_of_ints(x, 2) for x in rational_degrees])
+        except:
+            pass
+        else:
+            if len(rational_degrees) == length and valid_format:
+                return rational_degrees
+
+    raise ValueError("Unexpected input. Input is expected to be either a 2-tuple of ints or a list of 2-tuples"
+                     f" with length {length}.")
+
+
+def is_container_of_ints(val, length=None):
+    if length is None:
+        try:
+            return all([isinstance(x, int) for x in val])
+        except:
+            pass
+    else:
+        try:
+            return all([isinstance(x, int) for x in val]) and len(val) == length
+        except:
+            pass
+
+    return False

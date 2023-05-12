@@ -3,11 +3,12 @@ import numpy as np
 from .RationalFunction import RationalFunction
 from .WriteToScreen import WriteToScreen
 
+from .utils import check_rational_degrees
+
 
 class GAMRegressor:
-    def __init__(self, n, m=None, tol=1e-10):
-        self.n = n
-        self.m = n if m is None else m
+    def __init__(self, rational_degrees=(2, 2), tol=1e-10):
+        self.rational_degrees = rational_degrees
 
         self.tol = tol
 
@@ -58,7 +59,9 @@ class GAMRegressor:
         self.n_features_in_ = X.shape[1]
         self.intercept_ = np.mean(y)
 
-        self._learner_functions = [RationalFunction(self.n, self.m, X[:, i]) for i in range(self.n_features_in_)]
+        rational_degrees = check_rational_degrees(self.rational_degrees, self.n_features_in_)
+        self._learner_functions = [RationalFunction(n, m, X[:, i])
+                                   for i, (n, m) in enumerate(rational_degrees)]
 
         for count in range(num_rounds):
             self._fit(X, y, max_iter=max_iter, stopping_tol=stopping_tol, w=w, c1=c1, c2=c2,
