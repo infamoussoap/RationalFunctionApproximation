@@ -7,8 +7,6 @@ from .Bernstein import Bernstein
 
 from .utils import check_bernstein_w
 
-import warnings
-
 
 class RationalFunction(Approximator, Bernstein):
     def __init__(self, n, m, evaluation_points, tol=1e-10):
@@ -125,11 +123,7 @@ class RationalFunction(Approximator, Bernstein):
 
         self.intercept_ = -np.mean(self(self.evaluation_points))
 
-        if self.n_iter_ == max_iter:
-            warnings.warn("Maximum number of iterations has been reached and convergence is not guaranteed. "
-                          "Try increasing `max_iter` or increasing `stopping_tol`.")
-
-        return self
+        return self, self.n_iter_ == max_iter
 
     @staticmethod
     def _max_step_size(x, grad, tol=1e-10):

@@ -1,5 +1,7 @@
 import numpy as np
 
+import warnings
+
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
@@ -100,27 +102,39 @@ class GAMRegressor(RegressorMixin, BaseEstimator):
         self._learner_functions = [RationalFunction(n, m, X[:, i])
                                    for i, (n, m) in enumerate(rational_degrees)]
 
+        all_converged = True
         for count in range(self.num_rounds):
-            self._fit(X, y)
+            converged = self._fit(X, y)
 
             if self.verbose:
                 residuals = y - self.predict(X)
                 mse = np.mean(residuals ** 2)
                 WRITER.write(f"{count + 1}: {mse}", header='\r')
 
+            all_converged = converged and all_converged
+
         if self.verbose:
             print()
+
+        if all_converged:
+            warnings.warn("Maximum number of iterations has been reached and convergence is not guaranteed. "
+                          "Try increasing `max_iter` or increasing `stopping_tol`.")
 
         return self
 
     def _fit(self, X, y):
+        all_converged = True
         for i in range(self.n_features_in_):
             target_y = y - self.intercept_ - np.sum([f(X[:, j])
                                                      for j, f in enumerate(self._learner_functions) if j != i], axis=0)
 
-            self._learner_functions[i].fit(target_y, max_iter=self.max_iter, stopping_tol=self.stopping_tol, w=self.w,
-                                           c1=self.c1, c2=self.c2, line_search_iter=self.line_search_iter,
-                                           gamma=self.gamma)
+            _, converged = self._learner_functions[i].fit(target_y, max_iter=self.max_iter,
+                                                          stopping_tol=self.stopping_tol, w=self.w,
+                                                          c1=self.c1, c2=self.c2,
+                                                          line_search_iter=self.line_search_iter, gamma=self.gamma)
+
+            all_converged = all_converged and converged
+        return all_converged
 
     def predict(self, X):
         check_is_fitted(self)
