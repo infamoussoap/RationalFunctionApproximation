@@ -5,7 +5,7 @@ from functools import partial
 from .Bernstein import Bernstein
 from .Approximator import Approximator
 
-from ..utils import check_bernstein_w
+from ..utils import check_bernstein_w, check_target_functions
 
 from ..WriteToScreen import WriterToScreen
 import warnings
@@ -111,13 +111,13 @@ class EGD(Approximator, Bernstein):
 
         return self._update(self.w, d, step_size)
 
-    def fit(self, target_function, max_iter=100, stopping_tol=1e-6, w=None,
+    def fit(self, target_functions, max_iter=100, stopping_tol=1e-6, w=None,
             c1=1e-4, c2=0.5, line_search_iter=100, step_size=1, verbose=False):
         """ Fit the rational polynomial coefficients to the target function
 
             Parameters
             ----------
-            target_function : callable
+            target_functions : callable
                 The function to be fitted against. Must be able to take np.ndarray
             max_iter : int, default=100
                 The number of iterations to perform the optimization
@@ -145,9 +145,10 @@ class EGD(Approximator, Bernstein):
         """
 
         self.w = check_bernstein_w(w, self.m + 1)
+        target_functions = check_target_functions(target_functions)
 
         if len(self.w) == 1:
-            self.legendre_coef = self._legendre_coef(target_function, self.w)
+            self.legendre_coef = self._compute_legendre_coef(target_functions, self.w)
             return self
 
         w_old = 1  # Needs to be large enough so the while loop starts
@@ -155,13 +156,13 @@ class EGD(Approximator, Bernstein):
         while self.n_iter_ < max_iter and np.linalg.norm(w_old - self.w) > stopping_tol:
             w_old = self.w.copy()
 
-            self.w = self._search(target_function, c1=c1, c2=c2, line_search_iter=line_search_iter, step_size=step_size)
-            self.legendre_coef = self._legendre_coef(target_function, self.w)
+            self.w = self._search(target_functions, c1=c1, c2=c2, line_search_iter=line_search_iter, step_size=step_size)
+            self.legendre_coef = self._compute_legendre_coef(target_functions, self.w)
 
             self.n_iter_ += 1
 
             if verbose:
-                self._writer.write(f"{self.n_iter_}: {self.f(target_function, self.w)}", header='\r')
+                self._writer.write(f"{self.n_iter_}: {self.f(target_functions, self.w)}", header='\r')
 
         if verbose:
             print()

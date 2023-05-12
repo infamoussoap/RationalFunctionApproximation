@@ -86,3 +86,28 @@ def check_bernstein_legendre_x(x, correct_w_length, correct_coef_length):
         f"x must have length {correct_w_length + correct_coef_length}"
 
     return x
+
+
+def is_numpy_callable(f):
+    x = np.linspace(0, 1, 10)
+    try:
+        f(x)
+    except:
+        return False
+    return True
+
+
+def check_target_functions(target_functions):
+    if is_numpy_callable(target_functions):
+        return [target_functions, ]
+
+    try:
+        valid_format = all([is_numpy_callable(f) for f in target_functions])
+    except:
+        pass
+    else:
+        if valid_format:
+            return target_functions
+
+    raise ValueError("target_functions is of invalid format. It must either be a callable that accepts Numpy "
+                     "arrays or a list of callables that accepts Numpy arrays.")
