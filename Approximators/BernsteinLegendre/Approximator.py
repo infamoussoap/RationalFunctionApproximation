@@ -36,3 +36,6 @@ class Approximator(ArmijoSearch, ABC):
     @abstractmethod
     def legendre_coef(self):
         pass
+
+    def __call__(self, eval_points):
+        return self.numerator(eval_points) / self.denominator(eval_points)

@@ -33,3 +33,6 @@ class Approximator(ArmijoSearch, ABC):
 
     def reset(self, w=None):
         self.w = check_bernstein_w(w, self.m + 1)
+
+    def __call__(self, eval_points):
+        return self.numerator(eval_points) / self.denominator(eval_points)
