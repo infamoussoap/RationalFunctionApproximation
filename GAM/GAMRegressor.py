@@ -66,7 +66,8 @@ class GAMRegressor:
 
             if verbose:
                 residuals = y - self.predict(X)
-                self._writer.write(f"{count + 1}: {residuals @ residuals}", header='\r')
+                mse = np.mean(residuals ** 2)
+                self._writer.write(f"{count + 1}: {mse}", header='\r')
 
         if verbose:
             print()
