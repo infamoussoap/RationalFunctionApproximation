@@ -12,6 +12,10 @@ class BernsteinLegendre:
         self.n = n
         self.m = n if m is None else m
 
+        if self.m == 0 or self.n == 0:
+            raise ValueError("Bernstein Legendre doesn't support numerator or denominators with 0-degree. Use"
+                             " Bernstein instead.")
+
         integration_points = spacing_grid(spacing=spacing, n_points=num_integration_points)
         self.integration_points = integration_points[:-1]
         self.domain = [0, 1]
