@@ -10,11 +10,6 @@ from .utils import check_bernstein_w
 import warnings
 
 
-class Zeros:
-    def __call__(self, x):
-        return np.zeros_like(x)
-
-
 class RationalFunction(Approximator, Bernstein):
     def __init__(self, n, m, evaluation_points, tol=1e-10):
         Approximator.__init__(self)

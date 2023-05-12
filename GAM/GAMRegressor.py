@@ -1,6 +1,6 @@
 import numpy as np
 
-from .RationalFunction import Zeros, RationalFunction
+from .RationalFunction import RationalFunction
 from .WriteToScreen import WriteToScreen
 
 
