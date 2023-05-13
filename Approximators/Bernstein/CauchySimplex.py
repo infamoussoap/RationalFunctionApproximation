@@ -83,13 +83,13 @@ class CauchySimplex(Approximator, Bernstein):
 
         return z / np.sum(z)
 
-    def _search(self, target_function, c1=1e-4, c2=0.5, line_search_iter=100, gamma=1):
+    def _search(self, target_functions, c1=1e-4, c2=0.5, line_search_iter=100, gamma=1):
         """ Perform a step using a line search
 
             Parameters
             ----------
-            target_function : callable
-                The function to be fitted against. Must be able to take np.ndarray
+            target_functions : list(callable)
+                The functions to be fitted against. Must be able to take np.ndarray
             c1 : float, default=1e-4
                 Parameter for the armijo line search
             c2 : float, default=0.5
@@ -105,7 +105,7 @@ class CauchySimplex(Approximator, Bernstein):
             (m + 1, ) np.ndarray
                 The new iteration point once the optimal step has been taken
         """
-        f = partial(self.f, target_function)
+        f = partial(self.f, target_functions)
 
         grad = f(self.w, grad=True)
         d = self.w * (grad - grad @ self.w)
