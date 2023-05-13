@@ -26,7 +26,7 @@ class EGD(Approximator, Bernstein):
             Tolerance for the zero set
         w : (m + 1, ) np.ndarray
             The coefficients for the Bernstein polynomials (denominator)
-        legendre_coef : (n + 1, ) np.ndarray
+        _legendre_coef : (n + 1, ) np.ndarray
             The coefficients for the Legendre polynomials (numerator)
         n_iter_ : int
             Number of iterations run by the coordinate descent solver to reach the specified tolerance
@@ -55,7 +55,7 @@ class EGD(Approximator, Bernstein):
         self.tol = tol
 
         self.w = None
-        self.legendre_coef = None
+        self._legendre_coef = None
 
         self.n_iter_ = None
 
@@ -81,13 +81,13 @@ class EGD(Approximator, Bernstein):
         z = x * np.exp(-step_size * d)
         return z / np.sum(z)
 
-    def _search(self, target_function, c1=1e-4, c2=0.5, line_search_iter=100, step_size=1):
+    def _search(self, target_functions, c1=1e-4, c2=0.5, line_search_iter=100, step_size=1):
         """ Perform a step using a line search
 
             Parameters
             ----------
-            target_function : callable
-                The function to be fitted against. Must be able to take np.ndarray
+            target_functions : list(callable)
+                The functions to be fitted against. Must be able to take np.ndarray
             c1 : float, default=1e-4
                 Parameter for the armijo line search
             c2 : float, default=0.5
@@ -102,7 +102,7 @@ class EGD(Approximator, Bernstein):
             (m + 1, ) np.ndarray
                 The new iteration point once the optimal step has been taken
         """
-        f = partial(self.f, target_function)
+        f = partial(self.f, target_functions)
 
         d = f(self.w, grad=True)
 
@@ -148,7 +148,7 @@ class EGD(Approximator, Bernstein):
         target_functions = check_target_functions(target_functions)
 
         if len(self.w) == 1:
-            self.legendre_coef = self._compute_legendre_coef(target_functions, self.w)
+            self._legendre_coef = [self._compute_legendre_coef(f, self.w) for f in target_functions]
             return self
 
         w_old = 1  # Needs to be large enough so the while loop starts
@@ -157,7 +157,7 @@ class EGD(Approximator, Bernstein):
             w_old = self.w.copy()
 
             self.w = self._search(target_functions, c1=c1, c2=c2, line_search_iter=line_search_iter, step_size=step_size)
-            self.legendre_coef = self._compute_legendre_coef(target_functions, self.w)
+            self._legendre_coef = [self._compute_legendre_coef(f, self.w) for f in target_functions]
 
             self.n_iter_ += 1
 
