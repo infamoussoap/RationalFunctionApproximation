@@ -37,7 +37,7 @@ class AAAApproximator(RationalApproximator):
             R = AAAApproximator.eval_aaa(evaluation_points[support], F[~support], w, evaluation_points[~support])
 
         j = np.argmax(abs(F[support] - R))
-        true_j = np.arange(len(evaluation_points))[support][j]
+        true_j = np.arange(len(support))[support][j]
 
         support[true_j] = False
 
