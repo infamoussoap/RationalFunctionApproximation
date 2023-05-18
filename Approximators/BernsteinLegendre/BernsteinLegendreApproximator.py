@@ -5,24 +5,20 @@ from numpy.polynomial.legendre import Legendre
 from .ArmijoSearch import ArmijoSearch
 
 from ..utils import BernsteinPolynomial, check_bernstein_legendre_x
+from ..RationalApproximator import RationalApproximator
 
 
-class Approximator(ArmijoSearch, ABC):
+class BernsteinLegendreApproximator(ArmijoSearch, RationalApproximator, ABC):
     def __init__(self):
         self.x = None
         self.m = None
         self.n = None
 
-    @property
-    def denominator(self):
-        def f(eval_points):
-            return self.w @ BernsteinPolynomial(self.m, eval_points)
+    def denominator(self, x):
+        return self.w @ BernsteinPolynomial(self.m, x)
 
-        return f
-
-    @property
-    def numerator(self):
-        return Legendre(self.legendre_coef, domain=[0, 1])
+    def numerator(self, x):
+        return Legendre(self.legendre_coef, domain=[0, 1])(x)
 
     def reset(self, x=None):
         self.x = check_bernstein_legendre_x(x, self.m + 1, self.n + 1)
@@ -37,5 +33,5 @@ class Approximator(ArmijoSearch, ABC):
     def legendre_coef(self):
         pass
 
-    def __call__(self, eval_points):
-        return self.numerator(eval_points) / self.denominator(eval_points)
+    def __call__(self, x):
+        return self.numerator(x) / self.denominator(x)

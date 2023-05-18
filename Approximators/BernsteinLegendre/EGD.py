@@ -2,7 +2,7 @@ import numpy as np
 
 from functools import partial
 
-from .Approximator import Approximator
+from .BernsteinLegendreApproximator import BernsteinLegendreApproximator
 from .BernsteinLegendre import BernsteinLegendre
 
 from ..utils import check_bernstein_legendre_x
@@ -11,7 +11,7 @@ from ..WriteToScreen import WriterToScreen
 import warnings
 
 
-class EGD(Approximator, BernsteinLegendre):
+class EGD(BernsteinLegendreApproximator, BernsteinLegendre):
     """ Rational function approximation using Legendre polynomials on the numerator and Bernstein polynomials
         on the denominator. We iteratively change the Bernstein coefficients and the Legendre coefficients using
         an EGD for the Bernstein coefficients and normal descent for Legendre coefficients.
@@ -47,7 +47,7 @@ class EGD(Approximator, BernsteinLegendre):
             spacing : {'linear', 'chebyshev'} or np.ndarray, default='linear'
                 How the discretization of the integral is to be made.
         """
-        Approximator.__init__(self)
+        BernsteinLegendreApproximator.__init__(self)
         BernsteinLegendre.__init__(self, n, m=m,
                                    num_integration_points=num_integration_points, spacing=spacing)
         self.tol = tol

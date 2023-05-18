@@ -3,7 +3,7 @@ import numpy as np
 from functools import partial
 
 from .Bernstein import Bernstein
-from .Approximator import Approximator
+from .BernsteinApproximator import BernsteinApproximator
 
 from ..utils import check_bernstein_w, check_target_functions
 
@@ -11,7 +11,7 @@ from ..WriteToScreen import WriterToScreen
 import warnings
 
 
-class CauchySimplex(Approximator, Bernstein):
+class CauchySimplex(BernsteinApproximator, Bernstein):
     """ Rational function approximation using Legendre polynomials on the numerator and Bernstein polynomials
         on the denominator. We iteratively change the Bernstein coefficients using a Cauchy-Simplex scheme and
         the Legendre coefficients are found using a projection.
@@ -49,7 +49,7 @@ class CauchySimplex(Approximator, Bernstein):
             spacing : {'linear', 'chebyshev'} or np.ndarray, default='linear'
                 How the discretization of the integral is to be made.
         """
-        Approximator.__init__(self)
+        BernsteinApproximator.__init__(self)
         Bernstein.__init__(self, n, m=m,
                            num_integration_points=num_integration_points, spacing=spacing)
         self.tol = tol
