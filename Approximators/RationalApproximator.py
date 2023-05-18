@@ -16,3 +16,7 @@ class RationalApproximator(abc.ABC):
 
     def __call__(self, x):
         return self.numerator(x) / self.denominator(x)
+
+    @abc.abstractmethod
+    def fit(self, target_function, *args, **kwargs):
+        pass
