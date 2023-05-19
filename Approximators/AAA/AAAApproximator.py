@@ -1,11 +1,16 @@
 import numpy as np
+import warnings
 
 from ..RationalApproximator import RationalApproximator
 
 
 class AAAApproximator(RationalApproximator):
-    def __init__(self, n, evaluation_points=None):
+    def __init__(self, n, m=None, evaluation_points=None):
+        if m is not None and m != n:
+            warnings.warn('m is an ignored parameter, as '
+                          'AAA assumes the numerator and denominator are of the same degree')
         self.n = n
+        self.m = n
 
         self.evaluation_points = np.linspace(0, 1, 100) if evaluation_points is None else evaluation_points
 
