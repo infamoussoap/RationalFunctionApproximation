@@ -23,6 +23,8 @@ class AAAApproximator(RationalApproximator):
             out = AAAApproximator._fit(F, self.evaluation_points, self.w, self.support)
             self.w, self.support, self.target_at_poles, self.poles = out
 
+        return self
+
     def _reset_params(self):
         self.w = None
         self.support = np.ones(len(self.support)).astype(bool)
