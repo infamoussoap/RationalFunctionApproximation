@@ -37,7 +37,7 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
         numerator = self.numerator(x)
 
         if isinstance(numerator, np.ndarray):
-            numerator / denominator
+            return numerator / denominator
         else:
             return [num / denominator for num in numerator]
 
