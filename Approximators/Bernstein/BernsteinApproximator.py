@@ -5,7 +5,8 @@ from numpy.polynomial.legendre import Legendre
 
 from .ArmijoSearch import ArmijoSearch
 
-from ..utils import BernsteinPolynomial, check_bernstein_w
+from ..utils import BernsteinPolynomial
+from ..utils import check_bernstein_w, check_X_in_range
 from ..RationalApproximator import RationalApproximator
 
 
@@ -16,12 +17,16 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
         self._legendre_coef = None
 
     def denominator(self, x):
+        check_X_in_range(x, 0, 1)
+
         if len(self.w) == 1:
             return np.ones_like(x)
 
         return self.w @ BernsteinPolynomial(self.m, x)
 
     def numerator(self, x):
+        check_X_in_range(x, 0, 1)
+
         numerator_vals = [np.ones_like(x) if len(coef) == 1 else Legendre(coef, domain=[0, 1])(x)
                           for coef in self._legendre_coef]
 
@@ -33,6 +38,8 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
         self.w = check_bernstein_w(w, self.m + 1)
 
     def __call__(self, x):
+        check_X_in_range(x, 0, 1)
+
         denominator = self.denominator(x)
         numerator = self.numerator(x)
 

@@ -5,7 +5,7 @@ from functools import partial
 from .Bernstein import Bernstein
 from .BernsteinApproximator import BernsteinApproximator
 
-from ..utils import check_bernstein_w, check_target_ys
+from ..utils import check_bernstein_w, check_target_ys, check_X_in_range
 
 from ..WriteToScreen import WriterToScreen
 import warnings
@@ -145,6 +145,7 @@ class EGD(BernsteinApproximator, Bernstein):
             self : object
                 Fitted rational polynomial
         """
+        check_X_in_range(X, 0, 1)
 
         self.w = check_bernstein_w(self.w_start, self.m + 1)
         target_ys = check_target_ys(y)

@@ -128,3 +128,7 @@ def is_numpy_array(val, dim=1):
     if isinstance(val, np.ndarray) and len(val.shape) == dim:
         return True
     return False
+
+
+def check_X_in_range(X, min_val=0, max_val=1):
+    assert all((min_val <= X) * (X <= max_val)), f"X must contain values between {min_val} and {max_val}"

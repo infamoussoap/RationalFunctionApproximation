@@ -2,6 +2,7 @@ import numpy as np
 from numpy.polynomial.legendre import Legendre
 
 from ..utils import BernsteinPolynomial, LegendrePolynomial
+from ..utils import check_X_in_range
 
 
 class Bernstein:
@@ -29,6 +30,7 @@ class Bernstein:
             w : np.ndarray
             grad : bool
         """
+        check_X_in_range(X, 0, 1)
 
         denominator = self._denominator(X, w)
         weighted_target_ys = [y * denominator for y in target_ys]

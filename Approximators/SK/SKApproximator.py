@@ -2,6 +2,7 @@ import numpy as np
 
 from ..RationalApproximator import RationalApproximator
 from ..utils import LegendrePolynomial
+from ..utils import check_X_in_range
 
 
 class SKApproximator(RationalApproximator):
@@ -18,6 +19,8 @@ class SKApproximator(RationalApproximator):
         self.n_iter_ = 0
 
     def fit(self, X, y):
+        check_X_in_range(X, 0, 1)
+
         self._reset_params()
 
         P_legendre = LegendrePolynomial(self.n, X)
@@ -42,9 +45,11 @@ class SKApproximator(RationalApproximator):
         return self
 
     def numerator(self, x):
+        check_X_in_range(x, 0, 1)
         return self.a @ LegendrePolynomial(self.n, x)
 
     def denominator(self, x):
+        check_X_in_range(x, 0, 1)
         return self.b @ LegendrePolynomial(self.m, x)[1:] + 1
 
     def _reset_params(self):

@@ -2,6 +2,7 @@ import numpy as np
 import warnings
 
 from ..RationalApproximator import RationalApproximator
+from ..utils import check_X_in_range
 
 
 class AAAApproximator(RationalApproximator):
@@ -28,6 +29,8 @@ class AAAApproximator(RationalApproximator):
                 (n, )
         """
         self._reset_params()
+
+        check_X_in_range(X, 0, 1)
 
         support = np.ones(len(y)).astype(bool)
         for i in range(self.n):
@@ -63,27 +66,33 @@ class AAAApproximator(RationalApproximator):
         return w, support, y[~support], X[~support]
 
     def numerator(self, x):
+        check_X_in_range(x, 0, 1)
         return AAAApproximator.eval_aaa_numerator(x, self.target_at_poles, self.w, self.poles)
 
     def denominator(self, x):
+        check_X_in_range(x, 0, 1)
         return AAAApproximator.eval_aaa_denominator(x, self.w, self.poles)
 
     def __call__(self, x, tol=1e-10):
+        check_X_in_range(x, 0, 1)
         return AAAApproximator.eval_aaa(x, self.target_at_poles, self.w, self.poles, tol=tol)
 
     @staticmethod
     def eval_aaa_numerator(x, target_at_poles, w, poles):
+        check_X_in_range(x, 0, 1)
         numerator_matrix = target_at_poles[None, :] \
                            / (x[:, None] - poles[None, :])
         return numerator_matrix @ w
 
     @staticmethod
     def eval_aaa_denominator(x, w, poles):
+        check_X_in_range(x, 0, 1)
         denominator_matrix = 1 / (x[:, None] - poles[None, :])
         return denominator_matrix @ w
 
     @staticmethod
     def eval_aaa(x, target_at_poles, w, poles, tol=1e-10):
+        check_X_in_range(x, 0, 1)
         out = np.zeros_like(x)
 
         difference = abs(x[:, None] - poles[None, :])
