@@ -5,56 +5,62 @@ from ..RationalApproximator import RationalApproximator
 
 
 class AAAApproximator(RationalApproximator):
-    def __init__(self, n, m=None, evaluation_points=None):
+    def __init__(self, n, m=None):
         if m is not None and m != n:
             warnings.warn('m is an ignored parameter, as '
                           'AAA assumes the numerator and denominator are of the same degree')
         self.n = n
         self.m = n
 
-        self.evaluation_points = np.linspace(0, 1, 100) if evaluation_points is None else evaluation_points
-
         self.w = None
-        self.support = np.ones(len(evaluation_points)).astype(bool)
+
         self.target_at_poles = None
         self.poles = None
 
-    def fit(self, target_function):
+    def fit(self, X, y):
+        """ Fit the AAA Aproximator
+
+            Parameters
+            ----------
+            X : np.ndarray
+                (n, )
+            y : np.ndarray
+                (n, )
+        """
         self._reset_params()
 
-        F = target_function(self.evaluation_points)
-
+        support = np.ones(len(y)).astype(bool)
         for i in range(self.n):
-            out = AAAApproximator._fit(F, self.evaluation_points, self.w, self.support)
-            self.w, self.support, self.target_at_poles, self.poles = out
+            out = AAAApproximator._fit(X, y, self.w, support)
+            self.w, support, self.target_at_poles, self.poles = out
 
         return self
 
     def _reset_params(self):
         self.w = None
-        self.support = np.ones(len(self.support)).astype(bool)
         self.target_at_poles = None
         self.poles = None
 
     @staticmethod
-    def _fit(F, evaluation_points, w, support):
+    def _fit(X, y, w, support):
         if w is None:
-            R = np.mean(F)
+            R = np.mean(y)
         else:
-            R = AAAApproximator.eval_aaa(evaluation_points[support], F[~support], w, evaluation_points[~support])
+            R = AAAApproximator.eval_aaa(X[support], y[~support], w, X[~support])
 
-        j = np.argmax(abs(F[support] - R))
+        # This can be made faster
+        j = np.argmax(abs(y[support] - R))
         true_j = np.arange(len(support))[support][j]
 
         support[true_j] = False
 
-        A = (F[support][:, None] - F[~support][None, :]) \
-            / (evaluation_points[support][:, None] - evaluation_points[~support][None, :])
+        A = (y[support][:, None] - y[~support][None, :]) \
+            / (X[support][:, None] - X[~support][None, :])
 
         u, s, vh = np.linalg.svd(A)
 
         w = vh[-1]
-        return w, support, F[~support], evaluation_points[~support]
+        return w, support, y[~support], X[~support]
 
     def numerator(self, x):
         return AAAApproximator.eval_aaa_numerator(x, self.target_at_poles, self.w, self.poles)

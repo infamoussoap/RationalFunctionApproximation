@@ -5,7 +5,7 @@ from functools import partial
 from .Bernstein import Bernstein
 from .BernsteinApproximator import BernsteinApproximator
 
-from ..utils import check_bernstein_w, check_target_functions
+from ..utils import check_bernstein_w, check_target_ys
 
 from ..WriteToScreen import WriterToScreen
 import warnings
@@ -33,7 +33,8 @@ class EGD(BernsteinApproximator, Bernstein):
         _writer : WriterToScreen
             Used to write to screen for verbose
     """
-    def __init__(self, n, m=None, tol=1e-10, evaluation_points=None):
+    def __init__(self, n, m=None, tol=1e-10, max_iter=100, stopping_tol=1e-6, w=None,
+                 c1=1e-4, c2=0.5, line_search_iter=100, max_step_size=10, verbose=False):
         """ Initialize EGD Optimizer
 
             Parameters
@@ -42,16 +43,45 @@ class EGD(BernsteinApproximator, Bernstein):
                 The degree of the numerator
             m : int, default=None
                 The degree of the denominator, if not given it will default to n
-            evaluation_points : None or np.ndarray, default=None
-                Locations to evaluate the integral. Must be values between 0 and 1
             tol : float, default=1e-10
                 Tolerance for the zero set
+            max_iter : int, default=100
+                The number of iterations to perform the optimization
+            stopping_tol : float, default=1e-6
+                The tolerance for the stopping criteria. If |w_prev - w_new| < stopping_tol
+                then the iteration will stop
+            w : (m + 1, ) np.ndarray, default=None
+                The starting point for optimization. If None is given then it will default
+                to np.ones(m + 1) / (m + 1).
+            c1 : float, default=1e-4
+                Parameter for the armijo line search
+            c2 : float, default=0.5
+                Parameter for the armijo line search
+            line_search_iter : int, default=100
+                Number of iterations for the line search
+            max_step_size : float, default=10
+                Maximum candidate step size
+            verbose : bool, default=False
+                If set to true then the result of each step will be printed.
         """
         BernsteinApproximator.__init__(self)
-        Bernstein.__init__(self, n, m=m, evaluation_points=evaluation_points)
+        Bernstein.__init__(self, n, m=m)
+
         self.tol = tol
 
+        self.max_iter = max_iter
+        self.stopping_tol = stopping_tol
+
+        self.c1 = c1
+        self.c2 = c2
+        self.line_search_iter = line_search_iter
+        self.max_step_size = max_step_size
+
+        self.verbose = verbose
+
+        self.w_start = w
         self.w = None
+
         self._legendre_coef = None
 
         self.n_iter_ = None
@@ -78,62 +108,37 @@ class EGD(BernsteinApproximator, Bernstein):
         z = x * np.exp(-step_size * d)
         return z / np.sum(z)
 
-    def _search(self, target_functions, c1=1e-4, c2=0.5, line_search_iter=100, step_size=1):
+    def _search(self, X, target_ys):
         """ Perform a step using a line search
 
             Parameters
             ----------
-            target_functions : list(callable)
+            X : np.ndarray
+            target_ys : list of np.ndarray
                 The functions to be fitted against. Must be able to take np.ndarray
-            c1 : float, default=1e-4
-                Parameter for the armijo line search
-            c2 : float, default=0.5
-                Parameter for the armijo line search
-            line_search_iter : int, default=100
-                Number of iterations for the line search
-            step_size : float, default=1
-                The maximum candidate step size for the line search
 
             Returns
             -------
             (m + 1, ) np.ndarray
                 The new iteration point once the optimal step has been taken
         """
-        f = partial(self.f, target_functions)
+        f = partial(self.f, X, target_ys)
 
         d = f(self.w, grad=True)
 
-        step_size = self.backtracking_armijo_line_search(f, self.w, d, step_size,
-                                                         c1=c1, c2=c2, max_iter=line_search_iter)
+        step_size = self.backtracking_armijo_line_search(f, self.w, d, self.max_step_size,
+                                                         c1=self.c1, c2=self.c2, max_iter=self.line_search_iter)
 
         return self._update(self.w, d, step_size)
 
-    def fit(self, target_functions, max_iter=100, stopping_tol=1e-6, w=None,
-            c1=1e-4, c2=0.5, line_search_iter=100, step_size=1, verbose=False):
+    def fit(self, X, y):
         """ Fit the rational polynomial coefficients to the target function
 
             Parameters
             ----------
-            target_functions : callable
-                The function to be fitted against. Must be able to take np.ndarray
-            max_iter : int, default=100
-                The number of iterations to perform the optimization
-            stopping_tol : float, default=1e-6
-                The tolerance for the stopping criteria. If |w_prev - w_new| < stopping_tol
-                then the iteration will stop
-            w : (m + 1, ) np.ndarray, default=None
-                The starting point for optimization. If None is given then it will default
-                to np.ones(m + 1) / (m + 1).
-            c1 : float, default=1e-4
-                Parameter for the armijo line search
-            c2 : float, default=0.5
-                Parameter for the armijo line search
-            line_search_iter : int, default=100
-                Number of iterations for the line search
-            step_size : float, default=1
-                The maximum candidate step size for the line search
-            verbose : bool, default=False
-                If set to true then the result of each step will be printed.
+            X : np.ndarray
+            y : np.ndarray or list of np.ndarray
+                The target values to be fitted against
 
             Returns
             -------
@@ -141,30 +146,32 @@ class EGD(BernsteinApproximator, Bernstein):
                 Fitted rational polynomial
         """
 
-        self.w = check_bernstein_w(w, self.m + 1)
-        target_functions = check_target_functions(target_functions)
+        self.w = check_bernstein_w(self.w_start, self.m + 1)
+        target_ys = check_target_ys(y)
 
         if len(self.w) == 1:
-            self._legendre_coef = [self._compute_legendre_coef(f, self.w) for f in target_functions]
+            self._legendre_coef = [self._compute_legendre_coef(X, y) for y in target_ys]
             return self
 
         w_old = 1  # Needs to be large enough so the while loop starts
         self.n_iter_ = 0
-        while self.n_iter_ < max_iter and np.linalg.norm(w_old - self.w) > stopping_tol:
+        while self.n_iter_ < self.max_iter and np.linalg.norm(w_old - self.w) > self.stopping_tol:
             w_old = self.w.copy()
 
-            self.w = self._search(target_functions, c1=c1, c2=c2, line_search_iter=line_search_iter, step_size=step_size)
-            self._legendre_coef = [self._compute_legendre_coef(f, self.w) for f in target_functions]
+            self.w = self._search(X, target_ys)
+
+            denominator = self.denominator(X)
+            self._legendre_coef = [self._compute_legendre_coef(X, y * denominator) for y in target_ys]
 
             self.n_iter_ += 1
 
-            if verbose:
-                self._writer.write(f"{self.n_iter_}: {self.f(target_functions, self.w)}", header='\r')
+            if self.verbose:
+                self._writer.write(f"{self.n_iter_}: {self.f(X, target_ys, self.w)}", header='\r')
 
-        if verbose:
+        if self.verbose:
             print()
 
-        if self.n_iter_ == max_iter:
+        if self.n_iter_ == self.max_iter:
             warnings.warn("Maximum number of iterations has been reached and convergence is not guaranteed. "
                           "Try increasing `max_iter` or increasing `stopping_tol`.")
 

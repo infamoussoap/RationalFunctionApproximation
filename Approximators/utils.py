@@ -111,3 +111,20 @@ def check_target_functions(target_functions):
 
     raise ValueError("target_functions is of invalid format. It must either be a callable that accepts Numpy "
                      "arrays or a list of callables that accepts Numpy arrays.")
+
+
+def check_target_ys(target_ys):
+    if isinstance(target_ys, np.ndarray):
+        target_ys = [target_ys, ]
+
+    if isinstance(target_ys, list):
+        if all([is_numpy_array(y, dim=1) for y in target_ys]):
+            return target_ys
+
+    raise ValueError("Input expected to be either a 1-D np.ndarray or a list of 1-D np.ndarray")
+
+
+def is_numpy_array(val, dim=1):
+    if isinstance(val, np.ndarray) and len(val.shape) == dim:
+        return True
+    return False

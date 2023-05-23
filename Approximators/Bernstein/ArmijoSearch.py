@@ -46,10 +46,6 @@ class ArmijoSearch(ABC):
     def _update(self, x, d, step_size):
         pass
 
-    @abstractmethod
-    def _search(self, x, step_size=1, c1=1e-4, c2=0.5, max_iter=100):
-        pass
-
 
 def armijo_condition(f, x_old, x_new, f_old=None, grad_old=None, c1=1e-4):
     """ Returns True if the Armijo condition is satisfied

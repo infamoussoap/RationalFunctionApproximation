@@ -1,51 +1,56 @@
 import numpy as np
 from numpy.polynomial.legendre import Legendre
 
-from ..utils import spacing_grid, BernsteinPolynomial, LegendrePolynomial
+from ..utils import BernsteinPolynomial, LegendrePolynomial
 
 
 class Bernstein:
-    def __init__(self, n, m=None, evaluation_points=None):
-        """ m is the degree of the denominator
-            n is the degree of the numerator
+    def __init__(self, n, m=None):
+        """
+
+            Parameters
+            ----------
+            m : int
+                Degree of the denominator
+            n : int
+                Degree of the numerator
         """
         self.n = n
         self.m = n if m is None else m
 
-        evaluation_points = np.linspace(0, 1, 100) if evaluation_points is None else evaluation_points
-
-        self.evaluation_points = evaluation_points[:-1]
         self.domain = [0, 1]
 
-        self.dx = evaluation_points[1:] - evaluation_points[:-1]
+    def f(self, X, target_ys, w, grad=False):
+        """
 
-        self.B = BernsteinPolynomial(m, self.evaluation_points)
-        self.P = LegendrePolynomial(n, self.evaluation_points)
+            Parameters
+            ----------
+            target_ys : list of np.ndarray
+            w : np.ndarray
+            grad : bool
+        """
 
-    def f(self, target_functions, w, grad=False):
-        target_y = [f(self.evaluation_points) * self._denominator(w) for f in target_functions]
-        legendre_coefs = [self._compute_legendre_coef(f, w, target_y=y)
-                          for y, f in zip(target_y, target_functions)]
+        denominator = self._denominator(X, w)
+        weighted_target_ys = [y * denominator for y in target_ys]
+        legendre_coefs = [self._compute_legendre_coef(X, y) for y in weighted_target_ys]
 
-        difference = [y - self._numerator(coef) for y, coef in zip(target_y, legendre_coefs)]
+        difference = [y - self._numerator(X, coef) for y, coef in zip(weighted_target_ys, legendre_coefs)]
 
         if grad:
-            grads = [(self.dx[None, :] * self.B) @ (z * f(self.evaluation_points))
-                     for (z, f) in zip(difference, target_functions)]
-            return np.sum(grads, axis=0)
+            B = BernsteinPolynomial(self.m, X)
+            grads = [B @ (z * y) for (z, y) in zip(difference, target_ys)]
+            return np.mean(grads, axis=0)
 
-        return sum([(z ** 2) @ self.dx for z in difference])
+        return sum([np.mean(z ** 2) for z in difference])
 
-    def _denominator(self, w):
-        return w @ self.B
+    def _denominator(self, X, w):
+        B = BernsteinPolynomial(self.m, X)
+        return w @ B
 
-    def _numerator(self, legendre_coef):
-        return legendre_coef @ self.P
+    def _numerator(self, X, legendre_coef):
+        P = LegendrePolynomial(self.n, X)
+        return legendre_coef @ P
 
-    def _compute_legendre_coef(self, target_function, w, target_y=None):
-        if target_y is None:
-            target_y = target_function(self.evaluation_points) * self._denominator(w)
-
-        model = Legendre.fit(self.evaluation_points, target_y, deg=self.n, domain=self.domain)
-
+    def _compute_legendre_coef(self, X, y):
+        model = Legendre.fit(X, y, deg=self.n, domain=self.domain)
         return model.coef

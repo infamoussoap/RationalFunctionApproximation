@@ -5,34 +5,34 @@ from ..utils import LegendrePolynomial
 
 
 class SKApproximator(RationalApproximator):
-    def __init__(self, n, m=None, evaluation_points=None):
+    def __init__(self, n, m=None, max_iter=100, stopping_tol=1e-6):
         self.n = n
         self.m = n if m is None else m
 
-        self.evaluation_points = np.linspace(0, 1, 100) if evaluation_points is None else evaluation_points
+        self.max_iter = max_iter
+        self.stopping_tol = stopping_tol
 
         self.a = np.ones(self.n + 1)  # Numerator Coefficients
         self.b = np.zeros(self.m)  # Denominator Coefficients
 
         self.n_iter_ = 0
 
-    def fit(self, target_function, max_iter=100, stopping_tol=1e-6):
+    def fit(self, X, y):
         self._reset_params()
 
-        F = target_function(self.evaluation_points)
-
-        P_legendre = LegendrePolynomial(self.n, self.evaluation_points)
-        Q_legendre = LegendrePolynomial(self.m, self.evaluation_points)[1:]
+        P_legendre = LegendrePolynomial(self.n, X)
+        Q_legendre = LegendrePolynomial(self.m, X)[1:]  # Ignoring the first Legendre polynomial
 
         x_old = 2  # Needs to be large enough for the while loop to start
 
-        while self.n_iter_ < max_iter and np.linalg.norm(x_old - np.concatenate([self.a, self.b])):
+        while self.n_iter_ < self.max_iter and \
+                np.linalg.norm(x_old - np.concatenate([self.a, self.b])) > self.stopping_tol:
             Q = (1 + self.b @ Q_legendre)
-            y = F / Q
+            weighted_y = y / Q
 
-            design_matrix = np.vstack([P_legendre / Q, - y * Q_legendre]).T
+            design_matrix = np.vstack([P_legendre / Q, - weighted_y * Q_legendre]).T
 
-            coef, *_ = np.linalg.lstsq(design_matrix, y, rcond=None)
+            coef, *_ = np.linalg.lstsq(design_matrix, weighted_y, rcond=None)
 
             self.a = coef[:self.n + 1]
             self.b = coef[self.n + 1:]
