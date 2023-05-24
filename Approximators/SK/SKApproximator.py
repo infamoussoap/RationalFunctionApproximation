@@ -31,9 +31,11 @@ class SKApproximator(RationalApproximator):
         while self.n_iter_ < self.max_iter and \
                 np.linalg.norm(x_old - np.concatenate([self.a, self.b])) > self.stopping_tol:
             Q = (1 + self.b @ Q_legendre)
-            weighted_y = y / Q
 
-            design_matrix = np.vstack([P_legendre / Q, - weighted_y * Q_legendre]).T
+            support = Q != 0
+
+            weighted_y = y[support] / Q[support]
+            design_matrix = np.vstack([P_legendre[:, support] / Q[support], - weighted_y * Q_legendre[:, support]]).T
 
             coef, *_ = np.linalg.lstsq(design_matrix, weighted_y, rcond=None)
 
