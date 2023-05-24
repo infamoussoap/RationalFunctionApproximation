@@ -46,6 +46,7 @@ class AAAApproximator(RationalApproximator):
 
     @staticmethod
     def _fit(X, y, w, support):
+        """ The assumption is that X has unique values """
         if w is None:
             R = np.mean(y)
         else:
