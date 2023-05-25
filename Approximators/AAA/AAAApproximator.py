@@ -2,7 +2,7 @@ import numpy as np
 import warnings
 
 from ..RationalApproximator import RationalApproximator
-from ..utils import check_X_in_range
+from ..validation_checks import check_X_in_range
 
 
 class AAAApproximator(RationalApproximator):

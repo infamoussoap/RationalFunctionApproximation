@@ -2,7 +2,7 @@ import numpy as np
 from numpy.polynomial.legendre import Legendre
 
 from ..utils import BernsteinPolynomial, LegendrePolynomial
-from ..utils import check_X_in_range
+from ..validation_checks import check_X_in_range
 
 
 class Bernstein:

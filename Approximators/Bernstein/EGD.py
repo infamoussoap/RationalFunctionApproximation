@@ -5,7 +5,7 @@ from functools import partial
 from .Bernstein import Bernstein
 from .BernsteinApproximator import BernsteinApproximator
 
-from ..utils import check_bernstein_w, check_target_ys, check_X_in_range
+from ..validation_checks import check_bernstein_w, check_target_ys, check_X_in_range
 
 from ..WriteToScreen import WriterToScreen
 import warnings

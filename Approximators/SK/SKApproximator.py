@@ -2,7 +2,7 @@ import numpy as np
 
 from ..RationalApproximator import RationalApproximator
 from ..utils import LegendrePolynomial
-from ..utils import check_X_in_range
+from ..validation_checks import check_X_in_range
 
 
 class SKApproximator(RationalApproximator):

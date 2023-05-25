@@ -5,7 +5,7 @@ from functools import partial
 from .BernsteinLegendreApproximator import BernsteinLegendreApproximator
 from .BernsteinLegendre import BernsteinLegendre
 
-from ..utils import check_bernstein_legendre_x
+from ..validation_checks import check_bernstein_legendre_x
 
 from ..WriteToScreen import WriterToScreen
 import warnings
