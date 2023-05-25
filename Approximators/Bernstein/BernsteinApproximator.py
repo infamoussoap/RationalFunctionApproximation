@@ -5,7 +5,8 @@ from numpy.polynomial.legendre import Legendre
 
 from .ArmijoSearch import ArmijoSearch
 
-from ..utils import BernsteinPolynomial, bernstein_to_legendre_matrix, bernstein_to_chebyshev_matrix
+from ..utils import bernstein_to_legendre_matrix, bernstein_to_chebyshev_matrix
+from ..Polynomials import BernsteinPolynomial
 from ..validation_checks import check_bernstein_w, check_X_in_range
 from ..RationalApproximator import RationalApproximator
 

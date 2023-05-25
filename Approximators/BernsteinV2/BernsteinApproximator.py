@@ -5,7 +5,7 @@ from numpy.polynomial.legendre import Legendre
 
 from .ArmijoSearch import ArmijoSearch
 
-from ..utils import BernsteinPolynomial
+from ..Polynomials import BernsteinPolynomial
 from ..validation_checks import check_bernstein_w
 from ..RationalApproximator import RationalApproximator
 

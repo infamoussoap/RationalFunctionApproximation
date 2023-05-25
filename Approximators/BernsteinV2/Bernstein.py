@@ -1,7 +1,8 @@
 import numpy as np
 from numpy.polynomial.legendre import Legendre
 
-from ..utils import spacing_grid, BernsteinPolynomial, LegendrePolynomial
+from ..utils import spacing_grid
+from ..Polynomials import LegendrePolynomial, BernsteinPolynomial
 
 
 class Bernstein:

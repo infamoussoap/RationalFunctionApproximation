@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.polynomial.legendre import Legendre
 
-from ..utils import BernsteinPolynomial, LegendrePolynomial
+from ..Polynomials import LegendrePolynomial, BernsteinPolynomial
 from ..validation_checks import check_X_in_range
 
 

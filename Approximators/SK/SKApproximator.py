@@ -1,7 +1,7 @@
 import numpy as np
 
 from ..RationalApproximator import RationalApproximator
-from ..utils import LegendrePolynomial
+from ..Polynomials import LegendrePolynomial
 from ..validation_checks import check_X_in_range
 
 
