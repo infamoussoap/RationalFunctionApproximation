@@ -5,7 +5,7 @@ from numpy.polynomial.legendre import Legendre
 
 from .ArmijoSearch import ArmijoSearch
 
-from ..utils import BernsteinPolynomial, bernstein_to_legendre_matrix
+from ..utils import BernsteinPolynomial, bernstein_to_legendre_matrix, bernstein_to_chebyshev_matrix
 from ..validation_checks import check_bernstein_w, check_X_in_range
 from ..RationalApproximator import RationalApproximator
 
@@ -52,7 +52,10 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
     def legendre_coef(self):
         return self._legendre_coef[0] if len(self._legendre_coef) == 1 else self._legendre_coef
 
-    @property
     def w_as_legendre_coef(self):
         M = bernstein_to_legendre_matrix(self.m)
+        return M @ self.w
+
+    def w_as_chebyshev_coef(self):
+        M = bernstein_to_chebyshev_matrix(self.m)
         return M @ self.w

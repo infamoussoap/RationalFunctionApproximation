@@ -1,9 +1,13 @@
 import numpy as np
-from scipy.special import gammaln, eval_legendre
+from scipy.special import gammaln, eval_legendre, eval_chebyt
 
 
 def LegendrePolynomial(n, x):
     return np.vstack([eval_legendre(i, 2 * x - 1) for i in range(n + 1)])
+
+
+def ChebyshevPolynomial(n, x):
+    return np.vstack([eval_chebyt(i, 2 * x - 1) for i in range(n + 1)])
 
 
 def BernsteinPolynomial(n, x):
@@ -53,6 +57,37 @@ def bernstein_to_legendre_matrix(n):
                        * combination(n * np.ones((n + 1, n + 1)), k[None, :]) * sum_
 
     return transform_matrix
+
+
+def bernstein_to_chebyshev_matrix(n):
+    i = np.arange(0, n + 1)[:, None, None]
+    j = np.arange(0, n + 1)[None, :, None]
+    k = np.arange(0, n + 1)[None, None, :]
+
+    with np.errstate(invalid='ignore'):
+        # The last combination line throws a warning error
+        log_summand_numerator = combination(2 * j, 2 * i, as_log=True) \
+                                + combination(2 * (k + i), k + i, as_log=True) \
+                                + combination(2 * (n + j - k - i), (n + j - k - i), as_log=True)
+
+    log_summand_denominator = combination(n + j, k + i, as_log=True)
+
+    sign = np.power(-np.ones((n + 1, n + 1)), j - i)
+
+    summand = sign * np.exp(log_summand_numerator - log_summand_denominator)
+    summand[np.isnan(summand)] = 0
+
+    sum_ = np.sum(summand, axis=0)
+
+    j = np.arange(0, n + 1)[:, None]
+    k = np.arange(0, n + 1)[None, :]
+
+    delta = (j == 0).astype(int)
+    log_scaling_factor = np.log((delta + 2 * (1 - delta))) - (n + j) * np.log(4) + combination(n, k, as_log=True)
+
+    M = np.exp(log_scaling_factor) * sum_
+
+    return M
 
 
 def safe_log(x):
