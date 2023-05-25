@@ -32,6 +32,28 @@ def combination(n, k, as_log=False):
     return np.exp(gammaln(n + 1) - gammaln(n - k + 1) - gammaln(k + 1))
 
 
+def bernstein_to_legendre_matrix(n):
+    i = np.arange(0, n + 1)
+    j = np.arange(0, n + 1)
+    k = np.arange(0, n + 1)
+
+    log_summand_numerator = combination(j[None, :, None], i[:, None, None], as_log=True) * 2
+    log_summand_denominator = combination(n + j[None, :, None], k[None, None, :] + i[:, None, None], as_log=True)
+
+    mask = log_summand_denominator == -np.inf
+    log_summand_denominator[mask] = 0
+
+    log_summand = log_summand_numerator - log_summand_denominator
+    log_summand[mask] = -np.inf
+
+    sign = np.power(-np.ones((n + 1, n + 1)), j[None, :] + i[:, None])
+    sum_ = np.sum(sign[:, :, None] * np.exp(log_summand), axis=0)
+    transform_matrix = ((2 * j[:, None] + 1) / (n + j[:, None] + 1)) \
+                       * combination(n * np.ones((n + 1, n + 1)), k[None, :]) * sum_
+
+    return transform_matrix
+
+
 def safe_log(x):
     if not isinstance(x, np.ndarray):
         if x == 0:
