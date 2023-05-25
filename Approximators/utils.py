@@ -33,6 +33,7 @@ def combination(n, k, as_log=False):
 
 
 def bernstein_to_legendre_matrix(n):
+    """ Formula taken from 'Legendre–Bernstein basis transformations' by Rida T. Farouki 1999 """
     i = np.arange(0, n + 1)
     j = np.arange(0, n + 1)
     k = np.arange(0, n + 1)
