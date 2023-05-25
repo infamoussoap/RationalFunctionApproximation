@@ -10,7 +10,9 @@ def combination(n, k, as_log=False):
 
 
 def bernstein_to_legendre_matrix(n):
-    """ Formula taken from 'Legendre–Bernstein basis transformations' by Rida T. Farouki 1999 """
+    """ Formula taken from 'Legendre–Bernstein basis transformations' by Rida T. Farouki 1999
+        https://doi.org/10.1016/S0377-0427(00)00376-9
+    """
     i = np.arange(0, n + 1)
     j = np.arange(0, n + 1)
     k = np.arange(0, n + 1)
@@ -33,6 +35,9 @@ def bernstein_to_legendre_matrix(n):
 
 
 def bernstein_to_chebyshev_matrix(n):
+    """ Formula taken from 'Transformation of Chebyshev–Bernstein Polynomial Basis' by Abedallah Rababah 2003
+        https://doi.org/10.2478/cmam-2003-0038
+    """
     i = np.arange(0, n + 1)[:, None, None]
     j = np.arange(0, n + 1)[None, :, None]
     k = np.arange(0, n + 1)[None, None, :]
