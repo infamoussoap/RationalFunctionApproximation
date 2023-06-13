@@ -8,7 +8,9 @@ from .BernsteinLegendre import BernsteinLegendre
 from ..validation_checks import check_bernstein_legendre_x
 
 from ..WriteToScreen import WriterToScreen
+
 import warnings
+from ..CustomWarnings import ConvergenceWarning
 
 
 class EGD(BernsteinLegendreApproximator, BernsteinLegendre):
@@ -160,7 +162,7 @@ class EGD(BernsteinLegendreApproximator, BernsteinLegendre):
 
         if self.n_iter_ == max_iter:
             warnings.warn("Maximum number of iterations has been reached and convergence is not guaranteed. "
-                          "Try increasing `max_iter` or increasing `stopping_tol`.")
+                          "Try increasing `max_iter` or increasing `stopping_tol`.", category=ConvergenceWarning)
 
         return self
 

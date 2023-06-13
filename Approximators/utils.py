@@ -1,6 +1,9 @@
 import numpy as np
 from scipy.special import gammaln
 
+import warnings
+from .CustomWarnings import ConvergenceWarning
+
 
 def combination(n, k, as_log=False):
     if as_log:
@@ -97,3 +100,11 @@ def spacing_grid(spacing='linear', n_points=100):
         return (np.cos(np.linspace(np.pi, 0, n_points)) + 1) / 2
 
     raise ValueError("Invalid spacing_type. Select one from ['linear', 'chebyshev']")
+
+
+def ignore_warnings():
+    warnings.filterwarnings('ignore', category=ConvergenceWarning, module='.')
+
+
+def display_warnings():
+    warnings.filterwarnings('always', category=ConvergenceWarning, module='.')

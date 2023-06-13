@@ -8,7 +8,9 @@ from .BernsteinApproximator import BernsteinApproximator
 from ..validation_checks import check_bernstein_w, check_target_ys, check_X_in_range
 
 from ..WriteToScreen import WriterToScreen
+
 import warnings
+from ..CustomWarnings import ConvergenceWarning
 
 
 class CauchySimplex(BernsteinApproximator, Bernstein):
@@ -180,7 +182,7 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
 
         if self.n_iter_ == self.max_iter:
             warnings.warn("Maximum number of iterations has been reached and convergence is not guaranteed. "
-                          "Try increasing `max_iter` or increasing `stopping_tol`.")
+                          "Try increasing `max_iter` or increasing `stopping_tol`.", category=ConvergenceWarning)
 
         return self
 

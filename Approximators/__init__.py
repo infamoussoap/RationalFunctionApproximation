@@ -2,6 +2,12 @@ from .AAA import AAAApproximator
 from .SK import SKApproximator
 from .PolelessBarycentric import PolelessBarycentric
 
-import warnings
+from .utils import ignore_warnings
+from .utils import display_warnings
 
-warnings.simplefilter('always', UserWarning)
+import warnings
+from .CustomWarnings import ConvergenceWarning
+
+# warnings.simplefilter('always', ConvergenceWarning)
+
+display_warnings()
