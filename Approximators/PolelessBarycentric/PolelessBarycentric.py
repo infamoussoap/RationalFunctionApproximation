@@ -69,7 +69,9 @@ class PolelessBarycentric(RationalApproximator):
         target_at_poles = y[~support]
 
         w = np.array([PolelessBarycentric._compute_w(k, n, d, poles) for k in range(0, n)])
-        w = w / np.max(w)
+        max_w = np.max(abs(w))
+        if max_w > 1e-6:
+            w = w / max_w
 
         return w, support, target_at_poles, poles
 
@@ -112,6 +114,10 @@ class PolelessBarycentric(RationalApproximator):
     @staticmethod
     def eval_barycentric(x, target_at_poles, w, poles, tol=1e-10):
         out = np.zeros_like(x)
+
+        if np.all(w == 0):
+            out[:] = np.mean(target_at_poles)
+            return out
 
         difference = abs(x[:, None] - poles[None, :])
         min_difference = np.min(difference, axis=1)
