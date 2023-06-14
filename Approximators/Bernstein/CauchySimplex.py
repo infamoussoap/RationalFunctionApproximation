@@ -175,7 +175,8 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
             self.n_iter_ += 1
 
             if self.verbose:
-                self._writer.write(f"{self.n_iter_}: {self.f(X, target_ys, self.w)}", header='\r')
+                l_infinity = np.max(abs(self(X) - y))
+                self._writer.write(f"{self.n_iter_}: {self.f(X, target_ys, self.w)} : {l_infinity}", header='\r')
 
         if self.verbose:
             print()
