@@ -169,9 +169,8 @@ class EGD(BernsteinApproximator, Bernstein):
             self.n_iter_ += 1
 
             if self.verbose:
-                l_infinity = np.max(abs(self(X) - y))
-                self._writer.write(f"{self.n_iter_}: {self.f(X, target_ys, self.w):.6e} : "
-                                   f"{l_infinity:.6e}", header='\r')
+                diff = self(X) - y
+                self._writer.write_norms(self.n_iter_, diff, norms=[2, np.inf])
 
         if self.verbose:
             print()

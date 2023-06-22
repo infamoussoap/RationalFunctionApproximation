@@ -183,12 +183,7 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
 
             if self.verbose:
                 diff = self(X) - y
-
-                l_infinity = np.max(abs(diff))
-                l2 = np.mean(diff ** 2)
-
-                self._writer.write(f"{self.n_iter_}: {l2:.6e} : "
-                                   f"{l_infinity:.6e}", header='\r')
+                self._writer.write_norms(self.n_iter_, diff, norms=[2, np.inf])
 
         if self.verbose:
             print()
