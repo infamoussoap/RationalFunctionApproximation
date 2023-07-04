@@ -29,7 +29,9 @@ class PolelessBarycentric(RationalApproximator):
         self.target_at_poles = None
 
     def fit(self, x, y):
-        check_X_in_range(x, 0, 1)
+        self.w = None
+        self.poles = None
+        self.target_at_poles = None
 
         sorted_index = np.argsort(x)
         x = x[sorted_index]
@@ -38,7 +40,12 @@ class PolelessBarycentric(RationalApproximator):
         support = np.ones(len(x)).astype(bool)
 
         if len(x) == self.n:
-            self._fit(x, y, self.w, ~support, self.n, self.d)
+            w, support, target_at_poles, poles = self._fit(x, y, self.w, ~support, self.n, self.d)
+
+            self.w = w
+            self.target_at_poles = target_at_poles
+            self.poles = poles
+            
             return self
 
         for i in range(self.d, self.n + 1):
@@ -90,15 +97,12 @@ class PolelessBarycentric(RationalApproximator):
         return total
 
     def numerator(self, x):
-        check_X_in_range(x, 0, 1)
         return PolelessBarycentric.eval_numerator(x, self.target_at_poles, self.w, self.poles)
 
     def denominator(self, x):
-        check_X_in_range(x, 0, 1)
         return PolelessBarycentric.eval_denominator(x, self.w, self.poles)
 
     def __call__(self, x, tol=1e-10):
-        check_X_in_range(x, 0, 1)
         return PolelessBarycentric.eval_barycentric(x, self.target_at_poles, self.w, self.poles, tol=tol)
 
     @staticmethod
