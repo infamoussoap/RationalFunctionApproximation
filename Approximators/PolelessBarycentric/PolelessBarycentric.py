@@ -2,7 +2,6 @@ import numpy as np
 import warnings
 
 from ..RationalApproximator import RationalApproximator
-from ..validation_checks import check_X_in_range
 
 
 class PolelessBarycentric(RationalApproximator):
@@ -45,7 +44,7 @@ class PolelessBarycentric(RationalApproximator):
             self.w = w
             self.target_at_poles = target_at_poles
             self.poles = poles
-            
+
             return self
 
         for i in range(self.d, self.n + 1):
