@@ -13,7 +13,7 @@ def LegendrePolynomial(n, x, grad=False):
 
 
 def legendre_derivative(n, x):
-    return np.array([legendre(i).deriv()(2 * x - 1) for i in range(n + 1)])
+    return np.array([legendre(i).deriv()(2 * x - 1) for i in range(n + 1)]) * 2
 
 
 def ChebyshevPolynomial(n, x, grad=False):
