@@ -22,5 +22,5 @@ class WriterToScreen:
 
         s = f"{n_iter}"
         for norm in norms:
-            s += f": {np.linalg.norm(x, ord=norm):.6e}"
+            s += f": L-{norm} {np.linalg.norm(x, ord=norm):.6e}"
         self.write(s, header=header)
