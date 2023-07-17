@@ -36,6 +36,9 @@ class Bernstein:
 
         denominator = self._denominator(X, w)
 
+        if np.any(denominator == 0):
+            return np.inf
+
         legendre_coefs = [self._compute_legendre_coef(denominator, y, evaluated_legendre) for y in target_ys]
         numerators = [coef @ evaluated_legendre for coef in legendre_coefs]
 
@@ -62,10 +65,6 @@ class Bernstein:
         support = denominator > 0
 
         design_matrix = evaluated_legendre[:, support] / denominator[None, support]
-        try:
-            coef, *_ = np.linalg.lstsq(design_matrix.T, y[support], rcond=None)
-        except np.linalg.LinAlgError:
-            print(np.sum(denominator == 0))
-            raise ValueError("BREAK")
+        coef, *_ = np.linalg.lstsq(design_matrix.T, y[support], rcond=None)
 
         return coef
