@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.polynomial.legendre import Legendre
 
 from ..RationalApproximator import RationalApproximator
 from ..Polynomials import LegendrePolynomial
@@ -59,3 +60,14 @@ class SKApproximator(RationalApproximator):
         self.b = np.zeros(self.m)
 
         self.n_iter_ = 0
+
+    def poles(self):
+        coef = np.ones(len(self.b) + 1)
+        coef[1:] = self.b
+
+        denominator = Legendre(coef, domain=[0, 1])
+
+        roots = denominator.roots()
+        real_roots = np.real(roots[np.isreal(roots)])
+
+        return real_roots[(0 <= real_roots) * (real_roots <= 1)].copy()
