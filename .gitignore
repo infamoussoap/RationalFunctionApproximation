@@ -1,7 +1,6 @@
 .idea
 PolyRat
 *\.DS_Store
-Experiments
 ignore_files
 unit_tests
 .ipynb_checkpoints
