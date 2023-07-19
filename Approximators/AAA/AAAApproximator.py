@@ -15,8 +15,8 @@ class AAAApproximator(RationalApproximator):
 
         self.w = None
 
-        self.target_at_poles = None
-        self.poles = None
+        self.target_at_interpolation_points = None
+        self.interpolation_points = None
 
     def fit(self, X, y):
         """ Fit the AAA Aproximator
@@ -33,14 +33,14 @@ class AAAApproximator(RationalApproximator):
         support = np.ones(len(y)).astype(bool)
         for i in range(self.n):
             out = AAAApproximator._fit(X, y, self.w, support)
-            self.w, support, self.target_at_poles, self.poles = out
+            self.w, support, self.target_at_interpolation_points, self.interpolation_points = out
 
         return self
 
     def _reset_params(self):
         self.w = None
-        self.target_at_poles = None
-        self.poles = None
+        self.target_at_interpolation_points = None
+        self.interpolation_points = None
 
     @staticmethod
     def _fit(X, y, w, support):
@@ -65,13 +65,15 @@ class AAAApproximator(RationalApproximator):
         return w, support, y[~support], X[~support]
 
     def numerator(self, x):
-        return AAAApproximator.eval_aaa_numerator(x, self.target_at_poles, self.w, self.poles)
+        return AAAApproximator.eval_aaa_numerator(x, self.target_at_interpolation_points, self.w,
+                                                  self.interpolation_points)
 
     def denominator(self, x):
-        return AAAApproximator.eval_aaa_denominator(x, self.w, self.poles)
+        return AAAApproximator.eval_aaa_denominator(x, self.w, self.interpolation_points)
 
     def __call__(self, x, tol=1e-10):
-        return AAAApproximator.eval_aaa(x, self.target_at_poles, self.w, self.poles, tol=tol)
+        return AAAApproximator.eval_aaa(x, self.target_at_interpolation_points, self.w, self.interpolation_points,
+                                        tol=tol)
 
     @staticmethod
     def eval_aaa_numerator(x, target_at_poles, w, poles):
@@ -106,11 +108,11 @@ class AAAApproximator(RationalApproximator):
 
         return out
 
-    def pole_locations(self):
+    def poles(self):
         N = len(self.w)
 
         top_row = np.concatenate([[0], self.w])
-        bottom_row = np.hstack((np.ones((N, 1)), np.diag(self.poles)))
+        bottom_row = np.hstack((np.ones((N, 1)), np.diag(self.interpolation_points)))
 
         E = np.vstack([top_row, bottom_row])
 
@@ -125,6 +127,6 @@ class AAAApproximator(RationalApproximator):
     def residuals(self):
         dz = 1e-5 * np.exp(2j * np.pi * np.arange(1, 5) / 4)
 
-        temp = self.pole_locations()[:, None] + dz[None, :]
+        temp = self.poles()[:, None] + dz[None, :]
         out = self(temp.flatten())
         return out.reshape(temp.shape).dot(dz) / 4
