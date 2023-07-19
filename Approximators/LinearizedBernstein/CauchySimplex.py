@@ -175,8 +175,9 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
             self.n_iter_ += 1
 
             if self.verbose:
-                diff = self(X) - y
-                self._writer.write_norms(self.n_iter_, diff, norms=[2, np.inf])
+                diffs = [y - self._numerator(X, coef) / denominator
+                         for y, coef in zip(target_ys, self._legendre_coef)]
+                self._writer.write_norms(self.n_iter_, diffs, norms=[2, np.inf])
 
         if self.verbose:
             print()

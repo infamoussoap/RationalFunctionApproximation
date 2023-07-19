@@ -16,11 +16,18 @@ class WriterToScreen:
 
         sys.stdout.flush()
 
-    def write_norms(self, n_iter, x, norms=None, header='\r'):
+    def write_norms(self, n_iter, vectors, norms=None, header='\r'):
+        assert isinstance(vectors, list), "Input is assumed to be a list of vectors"
+
         if norms is None:
             norms = [2, np.inf]
 
         s = f"{n_iter}"
         for norm in norms:
-            s += f": L-{norm} {np.linalg.norm(x, ord=norm):.6e}"
+            if len(vectors) == 1:
+                formatted_norms = f"{np.linalg.norm(vectors[0], ord=norm):.6e}"
+            else:
+                formatted_norms = "(" + ", ".join([f"{np.linalg.norm(x, ord=norm):.6e}" for x in vectors]) + ")"
+
+            s += f": L-{norm} {formatted_norms}"
         self.write(s, header=header)
