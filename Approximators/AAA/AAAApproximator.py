@@ -6,7 +6,7 @@ from ..RationalApproximator import RationalApproximator
 
 
 class AAAApproximator(RationalApproximator):
-    def __init__(self, n, m=None):
+    def __init__(self, n, m=None, cleanup=False, cleanup_tol=1e-13):
         if m is not None and m != n:
             warnings.warn('m is an ignored parameter, as '
                           'AAA assumes the numerator and denominator are of the same degree')
@@ -14,6 +14,9 @@ class AAAApproximator(RationalApproximator):
         self.m = n
 
         self.w = None
+
+        self.cleanup = cleanup
+        self.cleanup_tol = cleanup_tol
 
         self.target_at_interpolation_points = None
         self.interpolation_points = None
@@ -31,9 +34,18 @@ class AAAApproximator(RationalApproximator):
         self._reset_params()
 
         support = np.ones(len(y)).astype(bool)
-        for i in range(self.n):
+
+        i = 0
+        while i < self.n:
             out = AAAApproximator._fit(X, y, self.w, support)
             self.w, support, self.target_at_interpolation_points, self.interpolation_points = out
+
+            if self.cleanup:
+                _, X, y, support = self._cleanup(X, y, support, e=self.cleanup_tol)
+                if len(X) == 0:
+                    raise ValueError("Cleanup has ran too many times and deleted every point in the dataset. "
+                                     "Try decreasing the cleanup tolerance, or turning it of.")
+            i = len(self.w)
 
         return self
 
@@ -130,3 +142,22 @@ class AAAApproximator(RationalApproximator):
         temp = self.poles()[:, None] + dz[None, :]
         out = self(temp.flatten())
         return out.reshape(temp.shape).dot(dz) / 4
+
+    def _cleanup(self, X, y, support, e=1e-13):
+        pole_locations = self.poles()
+        residual_at_poles = self.residuals()
+
+        for pole, residual in zip(pole_locations, residual_at_poles):
+            if abs(residual) < e:
+                closest_index = np.argmin(abs(pole - self.interpolation_points))
+
+                mask = X != self.interpolation_points[closest_index]
+                X = X[mask].copy()
+                y = y[mask].copy()
+                support = support[mask].copy()
+
+                self.interpolation_points = np.delete(self.interpolation_points, closest_index)
+                self.target_at_interpolation_points = np.delete(self.target_at_interpolation_points, closest_index)
+                self.w = np.delete(self.w, closest_index)
+
+        return self, X, y, support
