@@ -5,12 +5,17 @@ import warnings
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
-from .RationalFunction import RationalFunction
+from Approximators.Bernstein import CauchySimplex as Bernstein
+
 from .WriteToScreen import WriteToScreen
 
 from .utils import check_rational_degrees
 
 WRITER = WriteToScreen()
+
+import Approximators
+
+Approximators.ignore_warnings()
 
 
 class GAMRegressor(RegressorMixin, BaseEstimator):
@@ -99,8 +104,11 @@ class GAMRegressor(RegressorMixin, BaseEstimator):
         self.intercept_ = np.mean(y)
 
         rational_degrees = check_rational_degrees(self.rational_degrees, self.n_features_in_)
-        self._learner_functions = [RationalFunction(n, m, X[:, i])
+        self._learner_functions = [Bernstein(n, m, max_iter=self.max_iter, stopping_tol=self.stopping_tol, w=self.w,
+                                             c1=self.c1, c2=self.c2,
+                                             line_search_iter=self.line_search_iter, gamma=self.gamma)
                                    for i, (n, m) in enumerate(rational_degrees)]
+        self._learner_functions_constants = np.zeros(self.n_features_in_)
 
         all_converged = True
         for count in range(self.num_rounds):
@@ -125,13 +133,16 @@ class GAMRegressor(RegressorMixin, BaseEstimator):
     def _fit(self, X, y):
         all_converged = True
         for i in range(self.n_features_in_):
-            target_y = y - self.intercept_ - np.sum([f(X[:, j])
-                                                     for j, f in enumerate(self._learner_functions) if j != i], axis=0)
+            learner_function_predictions = [f(X[:, j]) + c if f.w is not None else np.zeros_like(X[:, j])
+                                            for j, (f, c) in
+                                            enumerate(zip(self._learner_functions, self._learner_functions_constants))
+                                            if j != i]
+            target_y = y - self.intercept_ - np.sum(learner_function_predictions, axis=0)
 
-            _, converged = self._learner_functions[i].fit(target_y, max_iter=self.max_iter,
-                                                          stopping_tol=self.stopping_tol, w=self.w,
-                                                          c1=self.c1, c2=self.c2,
-                                                          line_search_iter=self.line_search_iter, gamma=self.gamma)
+            self._learner_functions[i].fit(X[:, i], target_y)
+            self._learner_functions_constants[i] = -np.mean(self._learner_functions[i](X[:, i]))
+
+            converged = self._learner_functions[i].n_iter_ < self.max_iter
 
             all_converged = all_converged and converged
         return all_converged
@@ -140,4 +151,8 @@ class GAMRegressor(RegressorMixin, BaseEstimator):
         check_is_fitted(self)
 
         X = check_array(X)
-        return np.sum([f(X[:, j]) for j, f in enumerate(self._learner_functions)], axis=0) + self.intercept_
+
+        learner_function_predictions = [f(X[:, j]) + c if f.w is not None else np.zeros_like(X[:, j])
+                                        for j, (f, c) in
+                                        enumerate(zip(self._learner_functions, self._learner_functions_constants))]
+        return self.intercept_ + np.sum(learner_function_predictions, axis=0)
