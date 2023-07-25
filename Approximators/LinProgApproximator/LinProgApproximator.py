@@ -65,11 +65,14 @@ class LinProgApproximator:
         A = np.vstack([
             np.hstack([-P.T, (y - z)[:, None] * Q.T, -np.ones((N, 1))]),
             np.hstack([P.T, -(y + z)[:, None] * Q.T, -np.ones((N, 1))]),
-            np.hstack([np.zeros((N, n + 1)), -Q.T, np.zeros((N, 1))]),
-            np.hstack([np.zeros((N, n + 1)), Q.T, np.zeros((N, 1))])
+            np.hstack([np.zeros((N, n + 1)), -Q.T, np.zeros((N, 1))])
         ])
 
-        b = np.vstack([np.zeros((2 * N, 1)), -denominator_lb * np.ones((N, 1)), denominator_ub * np.ones((N, 1))])
+        b = np.vstack([np.zeros((2 * N, 1)), -denominator_lb * np.ones((N, 1))])
+
+        if denominator_ub is not None:
+            A = np.vstack([A, np.hstack([np.zeros((N, n + 1)), Q.T, np.zeros((N, 1))])])
+            b = np.vstack([b, denominator_ub * np.ones((N, 1))])
 
         c = np.zeros(n + m + 3)
         c[-1] = 1
