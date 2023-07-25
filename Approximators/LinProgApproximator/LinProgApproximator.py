@@ -9,7 +9,7 @@ from ..Polynomials import LegendrePolynomial
 class LinProgApproximator:
     """ Implementation of the paper
             Rational approximation and its application to improving deep learning classifiers
-            by V. Peiris, N. Sharon, N. Sukhorukova J. Ugon
+            by V. Peiris, N. Sharon, N. Sukhorukova, and J. Ugon
 
         This approximator reformulates the problem as a linear programming problem, with an extra constraint that
         the denominator at the evaluation points must be greater than delta, and thus positive at those points
