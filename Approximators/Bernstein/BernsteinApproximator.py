@@ -91,3 +91,14 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
     def w_as_chebyshev_coef(self):
         M = bernstein_to_chebyshev_matrix(self.m)
         return M @ self.w
+
+    def poles(self):
+        roots = []
+
+        if self.w[0] == 0:
+            roots.append(0)
+
+        if self.w[-1] == 0:
+            roots.append(1)
+
+        return np.array(roots)
