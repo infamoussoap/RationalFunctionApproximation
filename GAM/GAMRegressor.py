@@ -5,6 +5,7 @@ import warnings
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
+import Approximators
 from Approximators.Bernstein import CauchySimplex as Bernstein
 
 from .WriteToScreen import WriteToScreen
@@ -12,9 +13,6 @@ from .WriteToScreen import WriteToScreen
 from .utils import check_rational_degrees
 
 WRITER = WriteToScreen()
-
-import Approximators
-
 Approximators.ignore_warnings()
 
 
