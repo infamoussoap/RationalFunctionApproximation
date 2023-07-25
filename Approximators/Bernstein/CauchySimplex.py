@@ -111,8 +111,6 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
                 The point once the step has been taken
         """
         z = x - step_size * d
-        z[x < self.tol] = 0
-
         return z / np.sum(z)
 
     def _search(self, X, target_ys):
