@@ -1,6 +1,7 @@
 from .AAA import AAAApproximator
 from .SK import SKApproximator
 from .PolelessBarycentric import PolelessBarycentric
+from .LinProgApproximator import LinProgApproximator
 
 from .utils import ignore_warnings
 from .utils import display_warnings
