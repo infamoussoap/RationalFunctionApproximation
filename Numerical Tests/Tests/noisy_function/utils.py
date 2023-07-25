@@ -16,7 +16,7 @@ def get_approximators(n):
             'Polynomial': Bernstein(2 * n, 0),
             'Natural Spline': NaturalCubic(2 * n),
             'SK': SKApproximator(n, n),
-            'AAA': AAAApproximator(n + 1, n + 1),
+            'AAA': AAAApproximator(n + 1, n + 1, cleanup=True, cleanup_tol=1e-13),
             'Poleless Barycentric': PolelessBarycentric(n + 1, n + 1, d=3) if n >= 4 else None}
 
 
@@ -28,8 +28,8 @@ class NaturalCubic:
         self.ols_model = None
 
     def fit(self, X, y):
-        self.design_matrix = dmatrix(f'cr(variable, df={self.df}) - 1', {'variable': X.reshape(-1, 1)})
-        self.ols_model = LinearRegression(fit_intercept=True).fit(self.design_matrix, y)
+        self.design_matrix = dmatrix(f'cr(variable, df={self.df})', {'variable': X.reshape(-1, 1)})
+        self.ols_model = LinearRegression(fit_intercept=False).fit(self.design_matrix, y)
 
         return self
 
