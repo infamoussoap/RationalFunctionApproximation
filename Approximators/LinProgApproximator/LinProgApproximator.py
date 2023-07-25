@@ -10,14 +10,17 @@ class LinProgApproximator:
     """ Implementation of the paper
             Rational approximation and its application to improving deep learning classifiers
             by V. Peiris, N. Sharon, N. Sukhorukova, and J. Ugon
+            https://arxiv.org/abs/2002.11330
 
         This approximator reformulates the problem as a linear programming problem, with an extra constraint that
         the denominator at the evaluation points must be greater than delta, and thus positive at those points
     """
-    def __init__(self, n, m, stopping_tol=1e-10, denominator_lb=0.1, denominator_ub=50):
+    def __init__(self, n, m, stopping_tol=1e-10, denominator_lb=0.1, denominator_ub=50, optimizer_method='highs'):
         self.stopping_tol = stopping_tol
         self.denominator_lb = denominator_lb
         self.denominator_ub = denominator_ub
+
+        self.optimizer_method = optimizer_method
 
         self.n = n
         self.m = m
@@ -38,7 +41,8 @@ class LinProgApproximator:
         self.z = (u + l) / 2
         x_valid = None
         while u - l > self.stopping_tol:
-            success, x = self.solve_polynomial_approximation(y, self.z, P, Q, self.denominator_lb, self.denominator_ub)
+            success, x = self.solve_polynomial_approximation(y, self.z, P, Q, self.denominator_lb, self.denominator_ub,
+                                                             self.optimizer_method)
             if success:
                 u = self.z
                 x_valid = x.copy()
@@ -48,14 +52,14 @@ class LinProgApproximator:
             self.z = (u + l) / 2
 
         if x_valid is None:
-            raise ValueError("Linear Program did not converge")
+            raise ValueError("Linear Program did not converge to a solution.")
 
         self.numerator_coef = x_valid[:self.n + 1]
         self.denominator_coef = x_valid[self.n + 1: -1]
         return self
 
     @staticmethod
-    def solve_polynomial_approximation(y, z, P, Q, denominator_lb, denominator_ub):
+    def solve_polynomial_approximation(y, z, P, Q, denominator_lb, denominator_ub, optimizer_method):
         N = len(y)
 
         # Max polynomial degree
@@ -83,7 +87,7 @@ class LinProgApproximator:
 
         ub = np.inf * np.ones(n + m + 3)
 
-        result = linprog(c, A_ub=A, b_ub=b, bounds=np.stack([lb, ub], axis=1), method='highs')
+        result = linprog(c, A_ub=A, b_ub=b, bounds=np.stack([lb, ub], axis=1), method=optimizer_method)
 
         if result.success:
             return (result.x[-1] < 1e-13), result.x
