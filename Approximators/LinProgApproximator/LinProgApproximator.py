@@ -5,8 +5,10 @@ from scipy.optimize import linprog
 
 from ..Polynomials import LegendrePolynomial
 
+from ..RationalApproximator import RationalApproximator
 
-class LinProgApproximator:
+
+class LinProgApproximator(RationalApproximator):
     """ Implementation of the paper
             Rational approximation and its application to improving deep learning classifiers
             by V. Peiris, N. Sharon, N. Sukhorukova, and J. Ugon
