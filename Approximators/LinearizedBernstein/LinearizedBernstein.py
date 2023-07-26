@@ -6,8 +6,6 @@ import cvxopt
 from ..Polynomials import LegendrePolynomial, BernsteinPolynomial
 from ..RationalApproximator import RationalApproximator
 
-cvxopt.solvers.options['show_progress'] = False
-
 
 class LinearizedBernstein(RationalApproximator):
     def __init__(self, n, m=None):
