@@ -1,2 +1,1 @@
-from .CauchySimplex import CauchySimplex
-from .EGD import EGD
+from .LinearizedBernstein import LinearizedBernstein
