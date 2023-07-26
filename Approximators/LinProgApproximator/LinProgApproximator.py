@@ -15,7 +15,7 @@ class LinProgApproximator(RationalApproximator):
             https://arxiv.org/abs/2002.11330
 
         This approximator reformulates the problem as a linear programming problem, with an extra constraint that
-        the denominator at the evaluation points must be greater than delta, and thus positive at those points
+        the denominator at the evaluation points must be greater than delta
     """
     def __init__(self, n, m, stopping_tol=1e-10, denominator_lb=0.1, denominator_ub=50, optimizer_method='highs'):
         self.stopping_tol = stopping_tol
