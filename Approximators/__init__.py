@@ -2,6 +2,7 @@ from .AAA import AAAApproximator
 from .SK import SKApproximator
 from .PolelessBarycentric import PolelessBarycentric
 from .LinProgApproximator import LinProgApproximator
+from .QuadProgApproximator import QuadProgApproximator
 from .LinearizedBernstein import LinearizedBernstein
 
 from .utils import ignore_warnings
