@@ -29,14 +29,14 @@ class LinearizedBernstein(RationalApproximator):
         Q = cvxopt.matrix(R.T @ R)
         c = cvxopt.matrix(np.zeros(n + m + 2))
 
-        A_lb = cvxopt.matrix(np.hstack([np.zeros((m + 1, n + 1)), -np.eye(m + 1)]))
-        b_lb = cvxopt.matrix(np.zeros(m + 1))
+        A_ub = cvxopt.matrix(np.hstack([np.zeros((m + 1, n + 1)), -np.eye(m + 1)]))
+        b_ub = cvxopt.matrix(np.zeros(m + 1))
 
         A_eq = cvxopt.matrix(np.zeros((1, n + m + 2)))
         A_eq[n + 1:] = 1
         b_eq = cvxopt.matrix(1.0)
 
-        sol = cvxopt.solvers.qp(Q, c, A_lb, b_lb, A_eq, b_eq)
+        sol = cvxopt.solvers.qp(Q, c, A_ub, b_ub, A_eq, b_eq)
 
         x_sol = np.array(sol['x']).flatten()
 
