@@ -127,7 +127,7 @@ class GAMRegressor(RegressorMixin, BaseEstimator):
             current_loss = np.mean(residuals ** 2)
 
             if self.verbose:
-                WRITER.write(f"{self.n_iter_ + 1}: {current_loss}", header='\r')
+                WRITER.write(f"Iteration {self.n_iter_ + 1}: MSE={current_loss:.6e}", header='\r')
 
             self.n_iter_ += 1
 
