@@ -71,3 +71,23 @@ def bernstein_derivative(n, x):
     derivative[1:-1, :] *= (a[1:-1, None] - n * x[None, :])
 
     return derivative
+
+
+def MultivariateBernsteinPolynomial(n_vals, x_vals):
+    return MultivariatePolynomial(n_vals, x_vals, BernsteinPolynomial)
+
+
+def MultivariateLegendrePolynomial(n_vals, x_vals):
+    return MultivariatePolynomial(n_vals, x_vals, LegendrePolynomial)
+
+
+def MultivariatePolynomial(n_vals, x_vals, polynomial):
+    """ x_vals assumed to be np.ndarray or shape (# datapoints, # variables) """
+    out = np.ones([n + 1 for n in n_vals] + [len(x_vals)])
+    for i in range(len(n_vals)):
+        P = polynomial(n_vals[i], x_vals[:, i])
+
+        broadcast_shape = [n_vals[i] + 1 if j == i else 1 for j in range(len(n_vals))] + [-1]
+        out *= P.reshape(broadcast_shape)
+
+    return out
