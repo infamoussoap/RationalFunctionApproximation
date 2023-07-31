@@ -38,7 +38,8 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
             Used to write to screen for verbose
     """
     def __init__(self, n_vals, m_vals=None, tol=1e-10, max_iter=100, stopping_tol=1e-6, w=None,
-                 c1=1e-4, c2=0.5, line_search_iter=100, gamma=1, verbose=False):
+                 c1=1e-4, c2=0.5, line_search_iter=100, gamma=1, verbose=False,
+                 early_stopping=False, train_proportion=0.8, patience=10):
         """ Initialize Cauchy Simplex Optimizer
 
             Parameters
@@ -76,6 +77,10 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
 
         self.max_iter = max_iter
         self.stopping_tol = stopping_tol
+
+        self.early_stopping = early_stopping
+        self.train_proportion = train_proportion
+        self.patience = patience
 
         self.c1 = c1
         self.c2 = c2
@@ -155,6 +160,16 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
         """
         check_X_in_range(X, 0, 1)
 
+        if self.early_stopping:
+            indices = np.arange(len(X))
+            np.random.shuffle(indices)
+
+            n = int(len(X) * self.train_proportion)
+            X_valid, y_valid = X[n:], y[n:]
+            X, y = X[:n].copy(), y[:n].copy()
+
+            validation_history = []
+
         self.w = check_bernstein_w(self.w_start, int(np.prod([m + 1 for m in self.m_vals])))
         target_ys = check_target_ys(y)
 
@@ -182,6 +197,14 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
                 diffs = [y - self._numerator(X, coef) / denominator
                          for y, coef in zip(target_ys, self._legendre_coef)]
                 self._writer.write_norms(self.n_iter_, diffs, norms=[2, np.inf])
+
+            if self.early_stopping:
+                current_valid_error = np.linalg.norm(y_valid - self(X_valid), ord=2)
+                if len(validation_history) == self.patience:
+                    if validation_history[0] < current_valid_error:
+                        break
+                    validation_history.pop(0)
+                validation_history.append(current_valid_error)
 
         if self.verbose:
             print()
