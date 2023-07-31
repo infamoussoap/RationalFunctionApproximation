@@ -103,8 +103,10 @@ def spacing_grid(spacing='linear', n_points=100):
 
 
 def ignore_warnings():
+    """ Approximators.display_warnings() to show warnings """
     warnings.filterwarnings('ignore', category=ConvergenceWarning, module='.')
 
 
 def display_warnings():
+    """ Approximators.ignore_warnings() to ignore warnings """
     warnings.filterwarnings('always', category=ConvergenceWarning, module='.')
