@@ -1,5 +1,5 @@
 import numpy as np
-
+from sklearn.model_selection import ParameterGrid, train_test_split
 from functools import partial
 
 from .Bernstein import Bernstein
@@ -98,6 +98,30 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
         self.n_iter_ = None
 
         self._writer = WriterToScreen()
+
+    def get_params(self):
+        return {
+            'n_vals': self.n_vals,
+            'm_vals': self.m_vals,
+            'tol': self.tol,
+            'max_iter': self.max_iter,
+            'stopping_tol': self.stopping_tol,
+            'w': self.w_start,
+            'c1': self.c1,
+            'c2': self.c2,
+            'line_search_iter': self.line_search_iter,
+            'gamma': self.gamma,
+            'verbose': self.verbose,
+            'early_stopping': self.early_stopping,
+            'train_proportion': self.train_proportion,
+            'patience': self.patience,
+            'numerator_smoothing_penalty': self.numerator_smoothing_penalty
+        }
+
+    def set_params(self, **parameters):
+        for parameter, value in parameters.items():
+            setattr(self, parameter, value)
+        return self
 
     def _update(self, x, d, step_size):
         """ Perform a step in the update direction
@@ -242,3 +266,29 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
 
         diff = np.max(grad[support]) - x @ grad
         return 1 / diff if diff > 1e-6 else 1e6
+
+    def gridsearch(self, X, y, return_scores=False, keep_best=True, **param_grids):
+        X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.9)
+        loss = []
+
+        default_param_combination = self.get_params()
+        param_combination_generator = ParameterGrid(param_grids)
+        for param_combination in param_combination_generator:
+            new_param_combinations = default_param_combination.copy()
+            new_param_combinations.update(param_combination)
+
+            model = CauchySimplex(**new_param_combinations)
+            model.fit(X_train, y_train)
+
+            mse = np.mean((model(X_test) - y_test) ** 2)
+            loss.append((mse, model))
+
+        if keep_best:
+            sorted_loss = sorted(loss)
+            best_param = sorted_loss[0][1].get_params()
+
+            self.set_params(**best_param)
+            self.fit(X, y)
+
+        if return_scores:
+            return loss
