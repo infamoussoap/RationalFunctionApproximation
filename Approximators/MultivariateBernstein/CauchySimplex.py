@@ -39,7 +39,8 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
     """
     def __init__(self, n_vals, m_vals=None, tol=1e-10, max_iter=100, stopping_tol=1e-6, w=None,
                  c1=1e-4, c2=0.5, line_search_iter=100, gamma=1, verbose=False,
-                 early_stopping=False, train_proportion=0.8, patience=10):
+                 early_stopping=False, train_proportion=0.8, patience=10,
+                 numerator_smoothing_penalty=None):
         """ Initialize Cauchy Simplex Optimizer
 
             Parameters
@@ -71,7 +72,7 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
                 If set to true then the result of each step will be printed.
         """
         BernsteinApproximator.__init__(self)
-        Bernstein.__init__(self, n_vals, m_vals=m_vals)
+        Bernstein.__init__(self, n_vals, m_vals=m_vals, numerator_smoothing_penalty=numerator_smoothing_penalty)
 
         self.tol = tol
 
@@ -135,6 +136,7 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
         f = partial(self.f, X, target_ys)
 
         grad = f(self.w, grad=True)
+
         d = self.w * (grad - grad @ self.w)
 
         max_step_size = self._max_step_size(self.w, grad, tol=self.tol) * self.gamma
@@ -177,7 +179,8 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
         evaluated_legendre = evaluated_legendre.reshape(-1, len(X))
 
         if len(self.w) == 1:
-            self._legendre_coef = [self._compute_legendre_coef(np.ones(len(X)), y, evaluated_legendre)
+            self._legendre_coef = [self._compute_legendre_coef(np.ones(len(X)), y, evaluated_legendre,
+                                                               self.numerator_smoothing_penalty, self.n_vals)
                                    for y in target_ys]
             return self
 
@@ -189,7 +192,9 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
             self.w = self._search(X, target_ys)
 
             denominator = self.denominator(X)
-            self._legendre_coef = [self._compute_legendre_coef(denominator, y, evaluated_legendre) for y in target_ys]
+            self._legendre_coef = [self._compute_legendre_coef(denominator, y, evaluated_legendre,
+                                                               self.numerator_smoothing_penalty, self.n_vals)
+                                   for y in target_ys]
 
             self.n_iter_ += 1
 
