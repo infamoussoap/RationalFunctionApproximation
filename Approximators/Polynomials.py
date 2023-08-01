@@ -5,15 +5,15 @@ from scipy.special import legendre, chebyt
 from .utils import combination
 
 
-def LegendrePolynomial(n, x, grad=False):
+def LegendrePolynomial(n, x, grad=False, d=1):
     if grad:
-        return legendre_derivative(n, x)
+        return legendre_derivative(n, x, d=d)
 
     return np.vstack([eval_legendre(i, 2 * x - 1) for i in range(n + 1)])
 
 
-def legendre_derivative(n, x):
-    return np.array([legendre(i).deriv()(2 * x - 1) for i in range(n + 1)]) * 2
+def legendre_derivative(n, x, d=1):
+    return np.array([legendre(i).deriv(d)(2 * x - 1) for i in range(n + 1)]) * 2
 
 
 def ChebyshevPolynomial(n, x, grad=False):
