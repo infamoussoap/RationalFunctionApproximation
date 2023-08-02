@@ -40,7 +40,7 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
     def __init__(self, n_vals, m_vals=None, tol=1e-10, max_iter=100, stopping_tol=1e-6, w=None,
                  c1=1e-4, c2=0.5, line_search_iter=100, gamma=1, verbose=False,
                  early_stopping=False, train_proportion=0.8, patience=10,
-                 numerator_smoothing_penalty=None):
+                 numerator_smoothing_penalty=None, denominator_smoothing_penalty=None):
         """ Initialize Cauchy Simplex Optimizer
 
             Parameters
@@ -73,6 +73,8 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
         """
         BernsteinApproximator.__init__(self)
         Bernstein.__init__(self, n_vals, m_vals=m_vals, numerator_smoothing_penalty=numerator_smoothing_penalty)
+
+        self.denominator_smoothing_penalty = denominator_smoothing_penalty
 
         self.tol = tol
 
@@ -115,7 +117,8 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
             'early_stopping': self.early_stopping,
             'train_proportion': self.train_proportion,
             'patience': self.patience,
-            'numerator_smoothing_penalty': self.numerator_smoothing_penalty
+            'numerator_smoothing_penalty': self.numerator_smoothing_penalty,
+            'denominator_smoothing_penalty': self.denominator_smoothing_penalty
         }
 
     def set_params(self, **parameters):
@@ -160,6 +163,8 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
         f = partial(self.f, X, target_ys)
 
         grad = f(self.w, grad=True)
+        if self.denominator_smoothing_penalty is not None:
+            grad += self.denominator_smoothing_penalty * self.w
 
         d = self.w * (grad - grad @ self.w)
 
