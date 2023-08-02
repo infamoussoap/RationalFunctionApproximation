@@ -116,4 +116,4 @@ class Bernstein:
                         P_temp *= P.reshape(target_shape)
 
                 penalty += np.mean(P_temp ** 2, axis=-1)
-        return (np.prod(n_vals) ** 3) * penalty / np.max(penalty)
+        return penalty
