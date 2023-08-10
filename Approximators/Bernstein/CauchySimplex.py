@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.model_selection import ParameterGrid, train_test_split
 
 from functools import partial
 
@@ -38,7 +39,8 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
             Used to write to screen for verbose
     """
     def __init__(self, n, m=None, tol=1e-10, max_iter=100, stopping_tol=1e-6, w=None,
-                 c1=1e-4, c2=0.5, line_search_iter=100, gamma=1, verbose=False):
+                 c1=1e-4, c2=0.5, line_search_iter=100, gamma=1, verbose=False,
+                 numerator_smoothing_penalty=None):
         """ Initialize Cauchy Simplex Optimizer
 
             Parameters
@@ -70,7 +72,7 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
                 If set to true then the result of each step will be printed.
         """
         BernsteinApproximator.__init__(self)
-        Bernstein.__init__(self, n, m=m)
+        Bernstein.__init__(self, n, m=m, numerator_smoothing_penalty=numerator_smoothing_penalty)
 
         self.tol = tol
 
@@ -92,6 +94,27 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
         self.n_iter_ = None
 
         self._writer = WriterToScreen()
+
+    def get_params(self):
+        return {
+            'n': self.n,
+            'm': self.m,
+            'tol': self.tol,
+            'max_iter': self.max_iter,
+            'stopping_tol': self.stopping_tol,
+            'w': self.w_start,
+            'c1': self.c1,
+            'c2': self.c2,
+            'line_search_iter': self.line_search_iter,
+            'gamma': self.gamma,
+            'verbose': self.verbose,
+            'numerator_smoothing_penalty': self.numerator_smoothing_penalty
+        }
+
+    def set_params(self, **parameters):
+        for parameter, value in parameters.items():
+            setattr(self, parameter, value)
+        return self
 
     def _update(self, x, d, step_size):
         """ Perform a step in the update direction
@@ -161,7 +184,8 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
         evaluated_legendre = LegendrePolynomial(self.n, X, grad=False)
 
         if len(self.w) == 1:
-            self._legendre_coef = [self._compute_legendre_coef(np.ones(len(X)), y, evaluated_legendre)
+            self._legendre_coef = [self._compute_legendre_coef(np.ones(len(X)), y, evaluated_legendre,
+                                                               self.numerator_smoothing_penalty, self.n)
                                    for y in target_ys]
             return self
 
@@ -173,7 +197,9 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
             self.w = self._search(X, target_ys)
 
             denominator = self.denominator(X)
-            self._legendre_coef = [self._compute_legendre_coef(denominator, y, evaluated_legendre) for y in target_ys]
+            self._legendre_coef = [self._compute_legendre_coef(denominator, y, evaluated_legendre,
+                                                               self.numerator_smoothing_penalty, self.n)
+                                   for y in target_ys]
 
             self.n_iter_ += 1
 
@@ -213,3 +239,29 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
 
         diff = np.max(grad[support]) - x @ grad
         return 1 / diff if diff > 1e-6 else 1e6
+
+    def gridsearch(self, X, y, return_scores=False, keep_best=True, **param_grids):
+        X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.9)
+        loss = []
+
+        default_param_combination = self.get_params()
+        param_combination_generator = ParameterGrid(param_grids)
+        for param_combination in param_combination_generator:
+            new_param_combinations = default_param_combination.copy()
+            new_param_combinations.update(param_combination)
+
+            model = CauchySimplex(**new_param_combinations)
+            model.fit(X_train, y_train)
+
+            mse = np.mean((model(X_test) - y_test) ** 2)
+            loss.append((mse, model))
+
+        if keep_best:
+            sorted_loss = sorted(loss)
+            best_param = sorted_loss[0][1].get_params()
+
+            self.set_params(**best_param)
+            self.fit(X, y)
+
+        if return_scores:
+            return loss
