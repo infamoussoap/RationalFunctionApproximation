@@ -86,7 +86,21 @@ class Bernstein:
         return coef
 
     @staticmethod
-    def get_smoothing_penalty(n_vals, integration_points=100):
+    def get_smoothing_penalty(n_vals):
+        penalty = np.ones([n + 1 for n in n_vals])
+
+        for i, n in enumerate(n_vals):
+            target_shape = [1 if l != i else (n + 1) for l in range(len(n_vals))]
+
+            temp_penalty = np.arange(n + 1) ** np.arange(n + 1)
+            temp_penalty = temp_penalty.reshape(target_shape)
+
+            penalty *= temp_penalty
+
+        return penalty
+
+    @staticmethod
+    def get_smoothing_penalty_legacy(n_vals, integration_points=100):
         x = np.linspace(0, 1, integration_points)
         penalty = np.zeros([n + 1 for n in n_vals])
         for i in range(len(n_vals)):
