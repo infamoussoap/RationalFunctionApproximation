@@ -17,6 +17,7 @@ class LinearizedBernstein(RationalApproximator):
 
     def fit(self, x, y):
         self.legendre_coef, self.w = self.solve_as_qp(x, y, self.n, self.m)
+        return self
 
     @staticmethod
     def solve_as_qp(x, y, n, m):
