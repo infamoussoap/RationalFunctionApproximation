@@ -92,7 +92,7 @@ class Bernstein:
         for i, n in enumerate(n_vals):
             target_shape = [1 if l != i else (n + 1) for l in range(len(n_vals))]
 
-            temp_penalty = (2 * np.arange(n + 1)) ** (2 * np.arange(n + 1))
+            temp_penalty = (np.arange(n + 1)) ** (2 * np.arange(n + 1))
             temp_penalty = temp_penalty.reshape(target_shape)
 
             penalty *= temp_penalty
