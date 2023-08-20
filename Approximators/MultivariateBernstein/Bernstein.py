@@ -17,7 +17,7 @@ class Bernstein:
                 Degree of the numerator
         """
         self.n_vals = n_vals
-        self.m_vals = n_vals.copy() if m_vals is None else m_vals
+        self.m_vals = n_vals if m_vals is None else m_vals
 
         self.numerator_smoothing_penalty = numerator_smoothing_penalty
 
