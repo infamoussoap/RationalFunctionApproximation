@@ -2,7 +2,6 @@ import numpy as np
 
 from functools import partial
 
-from .Bernstein import Bernstein
 from .BernsteinApproximator import BernsteinApproximator
 
 from ..Polynomials import LegendrePolynomial
@@ -15,7 +14,7 @@ import warnings
 from ..CustomWarnings import ConvergenceWarning
 
 
-class EGD(BernsteinApproximator, Bernstein):
+class EGD(BernsteinApproximator):
     """ Rational function approximation using Legendre polynomials on the numerator and Bernstein polynomials
         on the denominator. We iteratively change the Bernstein coefficients using an EGD scheme and
         the Legendre coefficients are found using a projection.
@@ -38,7 +37,8 @@ class EGD(BernsteinApproximator, Bernstein):
             Used to write to screen for verbose
     """
     def __init__(self, n, m=None, tol=1e-10, max_iter=100, stopping_tol=1e-6, w=None,
-                 c1=1e-4, c2=0.5, line_search_iter=100, max_step_size=10, verbose=False):
+                 c1=1e-4, c2=0.5, line_search_iter=100, max_step_size=10, verbose=False,
+                 numerator_smoothing_penalty=None):
         """ Initialize EGD Optimizer
 
             Parameters
@@ -68,8 +68,7 @@ class EGD(BernsteinApproximator, Bernstein):
             verbose : bool, default=False
                 If set to true then the result of each step will be printed.
         """
-        BernsteinApproximator.__init__(self)
-        Bernstein.__init__(self, n, m=m)
+        BernsteinApproximator.__init__(self, n, m=m, numerator_smoothing_penalty=numerator_smoothing_penalty)
 
         self.tol = tol
 
