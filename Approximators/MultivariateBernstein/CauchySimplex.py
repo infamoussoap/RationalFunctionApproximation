@@ -2,7 +2,6 @@ import numpy as np
 from sklearn.model_selection import ParameterGrid, train_test_split
 from functools import partial
 
-from .Bernstein import Bernstein
 from .BernsteinApproximator import BernsteinApproximator
 
 from ..Polynomials import MultivariateLegendrePolynomial
@@ -15,7 +14,7 @@ import warnings
 from ..CustomWarnings import ConvergenceWarning
 
 
-class CauchySimplex(BernsteinApproximator, Bernstein):
+class CauchySimplex(BernsteinApproximator):
     """ Rational function approximation using Legendre polynomials on the numerator and Bernstein polynomials
         on the denominator. We iteratively change the Bernstein coefficients using a Cauchy-Simplex scheme and
         the Legendre coefficients are found using a projection.
@@ -71,8 +70,8 @@ class CauchySimplex(BernsteinApproximator, Bernstein):
             verbose : bool, default=False
                 If set to true then the result of each step will be printed.
         """
-        BernsteinApproximator.__init__(self)
-        Bernstein.__init__(self, n_vals, m_vals=m_vals, numerator_smoothing_penalty=numerator_smoothing_penalty)
+        BernsteinApproximator.__init__(self, n_vals, m_vals=m_vals,
+                                       numerator_smoothing_penalty=numerator_smoothing_penalty)
 
         self.denominator_smoothing_penalty = denominator_smoothing_penalty
 
