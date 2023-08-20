@@ -72,6 +72,7 @@ class CauchySimplex(BernsteinApproximator):
             numerator_smoothing_penalty : float, default=None
                 Degree of smoothing to apply. If None then no smoothing is applied
         """
+        self.m_start = m
         BernsteinApproximator.__init__(self, n, m=m, numerator_smoothing_penalty=numerator_smoothing_penalty)
 
         self.tol = tol
@@ -98,7 +99,7 @@ class CauchySimplex(BernsteinApproximator):
     def get_params(self):
         return {
             'n': self.n,
-            'm': self.m,
+            'm': self.m_start,
             'tol': self.tol,
             'max_iter': self.max_iter,
             'stopping_tol': self.stopping_tol,
@@ -269,6 +270,9 @@ class CauchySimplex(BernsteinApproximator):
             best_param = sorted_loss[0][1].get_params()
 
             self.set_params(**best_param)
+            if self.m is None:
+                self.m = self.n
+
             self.fit(X, y)
 
         if return_scores:

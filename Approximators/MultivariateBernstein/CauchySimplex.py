@@ -70,6 +70,7 @@ class CauchySimplex(BernsteinApproximator):
             verbose : bool, default=False
                 If set to true then the result of each step will be printed.
         """
+        self.m_vals_start = m_vals
         BernsteinApproximator.__init__(self, n_vals, m_vals=m_vals,
                                        numerator_smoothing_penalty=numerator_smoothing_penalty)
 
@@ -103,7 +104,7 @@ class CauchySimplex(BernsteinApproximator):
     def get_params(self):
         return {
             'n_vals': self.n_vals,
-            'm_vals': self.m_vals,
+            'm_vals': self.m_vals_start,
             'tol': self.tol,
             'max_iter': self.max_iter,
             'stopping_tol': self.stopping_tol,
@@ -292,6 +293,9 @@ class CauchySimplex(BernsteinApproximator):
             best_param = sorted_loss[0][1].get_params()
 
             self.set_params(**best_param)
+            if self.m_vals is None:
+                self.m_vals = self.n_vals
+
             self.fit(X, y)
 
         if return_scores:
