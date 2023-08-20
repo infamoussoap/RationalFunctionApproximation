@@ -69,6 +69,8 @@ class CauchySimplex(BernsteinApproximator):
                 to be taken.
             verbose : bool, default=False
                 If set to true then the result of each step will be printed.
+            numerator_smoothing_penalty : float, default=None
+                Degree of smoothing to apply. If None then no smoothing is applied
         """
         BernsteinApproximator.__init__(self, n, m=m, numerator_smoothing_penalty=numerator_smoothing_penalty)
 
@@ -239,6 +241,14 @@ class CauchySimplex(BernsteinApproximator):
         return 1 / diff if diff > 1e-6 else 1e6
 
     def gridsearch(self, X, y, return_scores=False, keep_best=True, **param_grids):
+        """ Performs a grid search over the values given in param_grids
+
+            Parameters
+            ----------
+            X : (N,) np.ndarray
+                The input
+
+        """
         X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.9)
         loss = []
 

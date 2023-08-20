@@ -12,6 +12,17 @@ from ..RationalApproximator import RationalApproximator
 
 class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
     def __init__(self, n, m=None, numerator_smoothing_penalty=None):
+        """ Initialize base class for Bernstein Approximator
+
+            Parameters
+            ----------
+            n : int
+                Degree of the numerator
+            m : int, default=None
+                Degree of the denominator. If None then is set to the degree of the numerator
+            numerator_smoothing_penalty : float, default=None
+                Degree of smoothing to apply. If None then no smoothing is applied.
+        """
         self.w = None
 
         self.n = n
@@ -24,13 +35,24 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
         self._legendre_coef = None
 
     def f(self, X, target_ys, w, grad=False):
-        """
+        """ Loss function to be minimized with respect to w
 
             Parameters
             ----------
-            target_ys : list of np.ndarray
+            X : (N,) np.ndarray
+                The input, expected to be a vector with values inside [0, 1]
+            target_ys : list[(N,) np.ndarray]
+                The target(s) to be fitted
             w : np.ndarray
-            grad : bool
+                Evaluates the loss function at this value of w
+            grad : bool, default=False
+                If True, returns df/dw
+
+            Returns
+            -------
+            float or np.ndarray
+                If grad=False then a float will be returned (the loss). Otherwise, df/dw will be returned,
+                that is, the gradient.
         """
         check_X_in_range(X, 0, 1)
 
@@ -57,6 +79,19 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
         return sum([np.mean(z ** 2) for z in difference])
 
     def denominator(self, x, grad=False):
+        """ Evaluates the denominator
+
+            Parameters
+            ----------
+            x : (N,) np.ndarray
+                The input, expected to be a vector with values inside [0, 1]
+            grad : bool, default=False
+                If true then returns the gradient of the denominator with respect to x
+
+            Returns
+            -------
+            np.ndarray
+        """
         check_X_in_range(x, 0, 1)
 
         if len(self.w) == 1:
@@ -68,6 +103,20 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
         return w @ BernsteinPolynomial(self.m, X, grad=grad)
 
     def numerator(self, x, grad=False):
+        """ Evaluates the numerator
+
+            Parameters
+            ----------
+            x : (N,) np.ndarray
+                The input, expected to be a vector with values inside [0, 1]
+            grad : bool, default=False
+                If true then returns the gradient of the numerator with respect to x
+
+            Returns
+            -------
+            np.ndarray or list[np.ndarray]
+                Will return list[np.ndarray] if multiple functions are being approximated
+        """
         check_X_in_range(x, 0, 1)
 
         numerator_vals = self._eval_numerator(x, grad=grad)
@@ -98,6 +147,20 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
         self.w = check_bernstein_w(w, self.m + 1)
 
     def __call__(self, x, grad=False):
+        """ Returns the fitted rational function evaluated at x
+
+            Parameters
+            ----------
+            x : (N,) np.ndarray
+                The input, expected to be a vector with values inside [0, 1]
+            grad : bool, default=False
+                If True then will return the derivative of the rational function with respect to x
+
+            Returns
+            -------
+            np.ndarray or list[np.ndarray]
+                Will return list[np.ndarray] if multiple functions are being approximated
+        """
         check_X_in_range(x, 0, 1)
 
         if grad:
@@ -130,14 +193,17 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
         return self._legendre_coef[0] if len(self._legendre_coef) == 1 else self._legendre_coef
 
     def w_as_legendre_coef(self):
+        """ Converts the denominator Bernstein coefficients into Legendre coefficients """
         M = bernstein_to_legendre_matrix(self.m)
         return M @ self.w
 
     def w_as_chebyshev_coef(self):
+        """ Converts the denominator Bernstein coefficients into Chebyshev coefficients """
         M = bernstein_to_chebyshev_matrix(self.m)
         return M @ self.w
 
     def poles(self):
+        """ Returns the poles inside [0, 1] """
         roots = []
 
         if self.w[0] == 0:
