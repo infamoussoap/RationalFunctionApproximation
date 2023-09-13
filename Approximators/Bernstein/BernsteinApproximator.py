@@ -5,7 +5,7 @@ import numpy as np
 from .ArmijoSearch import ArmijoSearch
 
 from ..utils import bernstein_to_legendre_matrix, bernstein_to_chebyshev_matrix
-from ..Polynomials import BernsteinPolynomial, LegendrePolynomial
+from ..Polynomials import BernsteinPolynomial, LegendrePolynomial, ChebyshevPolynomial
 from ..validation_checks import check_bernstein_w, check_X_in_range
 from ..RationalApproximator import RationalApproximator
 
@@ -231,3 +231,21 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
     @staticmethod
     def get_smoothing_penalty(n):
         return np.arange(n + 1) ** np.arange(n + 1)
+
+    def extrapolate_predict(self, x, basis='Legendre'):
+        numerator_val = self._eval_numerator(x, grad=False)
+
+        if basis.lower() == 'legendre':
+            denominator_coef = self.w_as_legendre_coef()
+            P = LegendrePolynomial(self.m, x, False)
+        elif basis.lower() == 'chebyshev':
+            denominator_coef = self.w_as_chebyshev_coef()
+            P = ChebyshevPolynomial(self.m, x, False)
+        else:
+            raise ValueError("Only accepted basis are 'legendre' or 'chebyshev'")
+        denominator_val = denominator_coef @ P
+
+        if len(numerator_val) == 1:
+            return numerator_val[0] / denominator_val
+
+        return [num / denominator_val for num in numerator_val]
