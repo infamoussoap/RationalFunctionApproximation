@@ -142,10 +142,15 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
 
         penalty = np.zeros([n + 1 for n in n_vals])
         for n_index in index_generator:
+
             total = 0
             for i in range(len(n_index)):
-                total += gammas[i] * (n_index[i] ** (2 * n_index[i])) \
-                         * np.prod([1 / (2 * n + 1) for j, n in enumerate(n_index) if j != i])
+                log_summand = np.log(gammas[i]) - sum([np.log(2 * n + 1) for j, n in enumerate(n_index) if j != i])
+
+                if n_index[i] > 0:
+                    log_summand += 2 * n_index[i] * np.log(n_index[i])
+
+                total += np.exp(log_summand)
 
             penalty[n_index] = total
 
