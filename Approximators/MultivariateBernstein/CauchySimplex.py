@@ -289,7 +289,7 @@ class CauchySimplex(BernsteinApproximator):
             loss.append((mse, model))
 
         if keep_best:
-            sorted_loss = sorted(loss)
+            sorted_loss = sorted(loss, key=lambda x: x[0])
             best_param = sorted_loss[0][1].get_params()
 
             self.set_params(**best_param)
