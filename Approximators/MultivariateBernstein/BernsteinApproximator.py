@@ -1,4 +1,5 @@
 from abc import ABC
+import itertools
 
 import numpy as np
 
@@ -121,22 +122,31 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
             coef, *_ = np.linalg.lstsq(design_matrix.T, y[support], rcond=None)
         else:
             assert n_vals is not None, "Smoothing penalty requires n_vals to not be none"
-            coef_weight = BernsteinApproximator.get_smoothing_penalty(n_vals).flatten()
+
+            try:
+                len(smoothing_penalty)
+            except TypeError:
+                smoothing_penalty = [smoothing_penalty] * 3
+            else:
+                assert len(smoothing_penalty) == len(n_vals), "Smoothing penalty must have the same length as numerator"
+
+            coef_weight = BernsteinApproximator.get_smoothing_penalty(n_vals, smoothing_penalty).flatten()
             coef = np.linalg.inv(design_matrix @ design_matrix.T \
-                                 + smoothing_penalty * np.diag(coef_weight)) @ design_matrix @ y[support]
+                                 + np.diag(coef_weight)) @ design_matrix @ y[support]
 
         return coef
 
     @staticmethod
-    def get_smoothing_penalty(n_vals):
-        penalty = np.ones([n + 1 for n in n_vals])
+    def get_smoothing_penalty(n_vals, gammas):
+        index_generator = itertools.product(*[np.arange(n + 1) for n in n_vals])
 
-        for i, n in enumerate(n_vals):
-            target_shape = [1 if l != i else (n + 1) for l in range(len(n_vals))]
+        penalty = np.zeros([n + 1 for n in n_vals])
+        for n_index in index_generator:
+            total = 0
+            for i in range(len(n_index)):
+                total += gammas[i] * (n_index[i] ** (2 * n_index[i])) \
+                         * np.prod([1 / (2 * n + 1) for j, n in enumerate(n_index) if j != i])
 
-            temp_penalty = (np.arange(n + 1)) ** (2 * np.arange(n + 1))
-            temp_penalty = temp_penalty.reshape(target_shape)
-
-            penalty *= temp_penalty
+            penalty[n_index] = total
 
         return penalty
