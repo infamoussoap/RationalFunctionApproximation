@@ -62,6 +62,21 @@ def check_target_ys(target_ys):
     raise ValueError("Input expected to be either a 1-D np.ndarray or a list of 1-D np.ndarray")
 
 
+def check_numerator_degrees(n_vals, length):
+    try:
+        len(n_vals)
+    except TypeError:
+        assert isinstance(n_vals, (np.int64, np.int32, int)), "Numerator degree must be of type int or a list of int"
+        return [n_vals] * length
+    else:
+        assert len(n_vals) == length, "Number of numerator degrees doesn't match up with expected number of degrees"
+
+        for n in n_vals:
+            assert isinstance(n, (np.int64, np.int32, int)), "Numerator degree must be of type int or a list of int"
+
+    return n_vals
+
+
 def is_numpy_array(val, dim=1):
     if isinstance(val, np.ndarray) and len(val.shape) == dim:
         return True
