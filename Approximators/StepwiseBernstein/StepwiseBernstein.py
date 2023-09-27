@@ -44,11 +44,9 @@ class StepwiseBernstein(RationalApproximator):
 
     def _project_numerator_and_denominator(self, x, y, weight, stopping_tol=1e-6):
         w_old = np.ones_like(self.w)
-        legendre_coef_old = np.zeros_like(self.legendre_coef.copy())
 
         self.projection_n_iter = 0
-        while (np.linalg.norm(w_old - self.w) > stopping_tol or
-               np.linalg.norm(legendre_coef_old - self.legendre_coef) > stopping_tol) and \
+        while np.linalg.norm(w_old - self.w) > stopping_tol and \
                 self.projection_n_iter < self.max_projection_iter:
 
             w_old[:] = self.w[:]
@@ -114,7 +112,7 @@ class StepwiseBernstein(RationalApproximator):
     def _project_denominator(self, x, target_ys, weight):
         B = BernsteinPolynomial(self.m, x)
 
-        A = np.vstack([y * B / weight for y in target_ys])
+        A = np.hstack([y * B / weight for y in target_ys])
         target = np.hstack([num / weight for num in self._eval_numerator(x)])
 
         optimizer = ConvexHull.CauchySimplexHull(A, target)
@@ -131,7 +129,13 @@ class StepwiseBernstein(RationalApproximator):
         return self.w @ BernsteinPolynomial(self.m, x)
 
     def __call__(self, x):
-        return self.numerator(x) / self.denominator(x)
+        numerator = self.numerator(x)
+        denominator = self.denominator(x)
+
+        if isinstance(numerator, np.ndarray):
+            return numerator / denominator
+        else:
+            return [num / denominator for num in numerator]
 
     def poles(self):
         """ Returns the poles inside [0, 1] """
