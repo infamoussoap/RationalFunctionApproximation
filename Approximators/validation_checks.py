@@ -5,7 +5,7 @@ def check_bernstein_w(w, correct_length):
     if w is None:
         return np.ones(correct_length) / correct_length
 
-    assert np.sum(w) == 1 and np.all(w > 0), "w must sum to one and have all positive indices"
+    assert abs(np.sum(w) - 1) < 1e-12 and np.all(w >= 0), "w must sum to one and have all positive indices"
     assert len(w) == correct_length, f"w must have length {correct_length}"
 
     return w
