@@ -1,32 +1,48 @@
 import numpy as np
 from numpy.polynomial.legendre import Legendre
 
-import cvxopt
-
 from ..Polynomials import LegendrePolynomial, BernsteinPolynomial
 from ..RationalApproximator import RationalApproximator
 
 from ..validation_checks import check_target_ys, check_X_in_range, check_numerator_degrees
 
+import cvxopt
+
 
 class LinearizedBernstein(RationalApproximator):
-    def __init__(self, n, m=None):
+    def __init__(self, n, m=None, max_iter=10, stopping_tol=1e-6, cvxopt_maxiter=500):
         self.n = n
         self.m = n if m is None else m
 
         self._legendre_coef = None
         self.w = None
 
-    def fit(self, x, y, weight=None):
+        self.max_iter = max_iter
+        self.n_iter_ = 0
+
+        self.stopping_tol = stopping_tol
+
+        self.sol = None
+
+        cvxopt.solvers.options['maxiters'] = cvxopt_maxiter
+
+    def fit(self, x, y):
         check_X_in_range(x, 0, 1)
         target_ys = check_target_ys(y)
 
         n_vals = check_numerator_degrees(self.n, len(target_ys))
 
-        if weight is None:
-            weight = np.ones_like(x)
+        weight = np.ones_like(x)
+        w_old = 2
+        self.w = np.ones(self.m + 1)
+        while self.n_iter_ < self.max_iter and np.linalg.norm(w_old - self.w) > self.stopping_tol:
+            w_old = self.w.copy()
 
-        self._legendre_coef, self.w = self.solve_as_qp(x, target_ys, n_vals, self.m, weight)
+            self._legendre_coef, self.w, self.sol = self.solve_as_qp(x, target_ys, n_vals, self.m, weight)
+            weight = self.w @ BernsteinPolynomial(self.m, x)
+
+            self.n_iter_ += 1
+
         return self
 
     @staticmethod
@@ -69,7 +85,7 @@ class LinearizedBernstein(RationalApproximator):
 
         legendre_coefs = [legendre_coefs[start:end] for start, end in zip(start_index, end_index)]
 
-        return legendre_coefs, w
+        return legendre_coefs, w, sol
 
     def __call__(self, x):
         numerator_vals = self.numerator(x)
