@@ -2,7 +2,7 @@ import numpy as np
 
 from ..RationalApproximator import RationalApproximator
 from ..Polynomials import LegendrePolynomial, BernsteinPolynomial
-from ..validation_checks import check_X_in_range
+from ..validation_checks import check_X_in_range, check_target_ys
 
 from ..utils import bernstein_to_legendre_matrix
 
@@ -14,7 +14,7 @@ class StepwiseBernstein(RationalApproximator):
         self.n = n
         self.m = m
 
-        self.legendre_coef = None
+        self._legendre_coef = None
         self.w = np.ones(m + 1) / (m + 1)
 
         self.sol = None
@@ -26,14 +26,16 @@ class StepwiseBernstein(RationalApproximator):
         self.projection_n_iter = 0
         self.fit_n_iter_ = 0
 
-    def fit(self, x, y):
+    def fit(self, x, target_ys):
         weight = np.ones_like(x)
+
+        target_ys = check_target_ys(target_ys)
 
         self.fit_n_iter_ = 0
         while self.fit_n_iter_ < self.max_fit_iter:
-            requires_projection = self._fit(x, y, weight)
+            requires_projection = self._fit(x, target_ys, weight)
             if requires_projection:
-                self._project_numerator_and_denominator(x, y, weight=weight)
+                self._project_numerator_and_denominator(x, target_ys, weight=weight)
 
             self.fit_n_iter_ += 1
             weight = self.denominator(x)
@@ -57,8 +59,8 @@ class StepwiseBernstein(RationalApproximator):
 
             self.projection_n_iter += 1
 
-    def _fit(self, x, y, weight):
-        unnormalized_legendre_coef, w_as_legendre = self._fit_as_legendre(x, y, weight)
+    def _fit(self, x, target_ys, weight):
+        unnormalized_legendre_coef, w_as_legendre = self._fit_as_legendre(x, target_ys, weight)
 
         B_2_M = bernstein_to_legendre_matrix(self.m)
         w_as_bernstein = np.linalg.inv(B_2_M) @ w_as_legendre
@@ -67,45 +69,55 @@ class StepwiseBernstein(RationalApproximator):
             c = np.sum(w_as_bernstein)
 
             self.w = w_as_bernstein / c
-            self.legendre_coef = unnormalized_legendre_coef / c
+            self._legendre_coef = [coef / c for coef in unnormalized_legendre_coef]
 
             return False
 
         self.w = w_as_bernstein
-        self.legendre_coef = unnormalized_legendre_coef
+        self._legendre_coef = unnormalized_legendre_coef
 
         return True
 
-    def _fit_as_legendre(self, X, y, weight):
-        P_legendre = LegendrePolynomial(self.n, X)
-        Q_legendre = LegendrePolynomial(self.m, X)[1:]  # Ignoring the first Legendre polynomial
+    def _fit_as_legendre(self, X, target_ys, weight):
+        P = LegendrePolynomial(self.n, X)
+        Q = LegendrePolynomial(self.m, X)[1:]  # Ignoring the first Legendre polynomial
 
-        support = weight != 0
+        A_list = []
+        for i, y in enumerate(target_ys):
+            A_list.append(np.hstack([P.T if i == j else np.zeros_like(P.T) for j in range(len(target_ys))] \
+                                    + [-(y * Q).T]) / weight[:, None])
 
-        weighted_y = y[support] / weight[support]
-        design_matrix = np.vstack([P_legendre[:, support] / weight[support], - weighted_y * Q_legendre[:, support]]).T
+        A = np.vstack(A_list)
+        coef, *_ = np.linalg.lstsq(A, np.hstack([y / weight for y in target_ys]), rcond=None)
 
-        coef, *_ = np.linalg.lstsq(design_matrix, weighted_y, rcond=None)
+        unnormalized_legendre_coefs = [coef[i * (self.n + 1): (i + 1) * (self.n + 1)] for i in range(len(target_ys))]
+        w_as_legendre = np.hstack([[1], coef[-self.m:]])
 
-        a = coef[:self.n + 1]
-        b = np.hstack([[1], coef[self.n + 1:]])
+        return unnormalized_legendre_coefs, w_as_legendre
 
-        return a, b
-
-    def _project_numerator(self, x, y, weight):
-        support = weight != 0
-
+    def _project_numerator(self, x, target_ys, weight):
         P = LegendrePolynomial(self.n, x)
-        self.legendre_coef, *_ = np.linalg.lstsq(P.T[support, :] / weight[support, None],
-                                                 (y * self.denominator(x))[support] / weight[support],
-                                                 rcond=None)
 
-    def _project_denominator(self, x, y, weight):
-        support = weight != 0
+        A_list = []
+        for i, y in enumerate(target_ys):
+            A_list.append(np.hstack([P.T if i == j else np.zeros_like(P.T) for j in range(len(target_ys))]) \
+                          / weight[:, None])
 
+        denominator = self.denominator(x)
+
+        A = np.vstack(A_list)
+        target = np.hstack([y * denominator / weight for y in target_ys])
+
+        coef, *_ = np.linalg.lstsq(A, target, rcond=None)
+        self._legendre_coef = [coef[i * (self.n + 1): (i + 1) * (self.n + 1)] for i in range(len(target_ys))]
+
+    def _project_denominator(self, x, target_ys, weight):
         B = BernsteinPolynomial(self.m, x)
-        optimizer = ConvexHull.CauchySimplexHull((y * B)[:, support] / weight[None, support],
-                                                 self.numerator(x)[support] / weight[support])
+
+        A = np.vstack([y * B / weight for y in target_ys])
+        target = np.hstack([num / weight for num in self._eval_numerator(x)])
+
+        optimizer = ConvexHull.CauchySimplexHull(A, target)
 
         self.w = np.ones(self.m + 1) / (self.m + 1)
         w_old = np.zeros_like(self.w)
@@ -114,9 +126,6 @@ class StepwiseBernstein(RationalApproximator):
                 break
             w_old[:] = self.w[:]
             self.w = optimizer.search(self.w)
-
-    def numerator(self, x):
-        return self.legendre_coef @ LegendrePolynomial(self.n, x)
 
     def denominator(self, x):
         return self.w @ BernsteinPolynomial(self.m, x)
@@ -135,3 +144,27 @@ class StepwiseBernstein(RationalApproximator):
             roots.append(1)
 
         return np.array(roots)
+
+    def numerator(self, x):
+        numerator_vals = self._eval_numerator(x)
+
+        if len(numerator_vals) == 1:
+            return numerator_vals[0]
+        return numerator_vals
+
+    def _eval_numerator(self, x):
+        numerator_vals = [self._numerator(x, coef) for coef in self._legendre_coef]
+        return numerator_vals
+
+    def _numerator(self, X, legendre_coef):
+        if len(legendre_coef) == 1:
+            return np.ones_like(X)
+
+        P = LegendrePolynomial(self.n, X)
+        return legendre_coef @ P
+
+    @property
+    def legendre_coef(self):
+        if len(self._legendre_coef) == 1:
+            return self._legendre_coef[0]
+        return self._legendre_coef
