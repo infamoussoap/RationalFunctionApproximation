@@ -39,7 +39,8 @@ class CauchySimplex(BernsteinApproximator):
     """
     def __init__(self, n, m=None, tol=1e-10, max_iter=100, stopping_tol=1e-6, w=None,
                  c1=1e-4, c2=0.5, line_search_iter=100, gamma=1, verbose=False,
-                 numerator_smoothing_penalty=None):
+                 numerator_smoothing_penalty=None, hot_start=False,
+                 **hot_start_kwargs):
         """ Initialize Cauchy Simplex Optimizer
 
             Parameters
@@ -73,7 +74,8 @@ class CauchySimplex(BernsteinApproximator):
                 Degree of smoothing to apply. If None then no smoothing is applied
         """
         self.m_start = m
-        BernsteinApproximator.__init__(self, n, m=m, numerator_smoothing_penalty=numerator_smoothing_penalty)
+        BernsteinApproximator.__init__(self, n, m=m, numerator_smoothing_penalty=numerator_smoothing_penalty,
+                                       hot_start=hot_start, **hot_start_kwargs)
 
         self.tol = tol
 
@@ -178,9 +180,12 @@ class CauchySimplex(BernsteinApproximator):
                 Fitted rational polynomial
         """
         check_X_in_range(X, 0, 1)
-
-        self.w = check_bernstein_w(self.w_start, self.m + 1)
         target_ys = check_target_ys(y)
+
+        if self.hot_start:
+            self.w = self.get_hotstart_w(X, y, **self.hot_start_kwargs)
+        else:
+            self.w = check_bernstein_w(self.w_start, self.m + 1)
 
         evaluated_legendre = LegendrePolynomial(self.n, X, grad=False)
 

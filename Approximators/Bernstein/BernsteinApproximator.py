@@ -9,9 +9,12 @@ from ..Polynomials import BernsteinPolynomial, LegendrePolynomial, ChebyshevPoly
 from ..validation_checks import check_bernstein_w, check_X_in_range
 from ..RationalApproximator import RationalApproximator
 
+from .. import StepwiseBernstein
+
 
 class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
-    def __init__(self, n, m=None, numerator_smoothing_penalty=None):
+    def __init__(self, n, m=None, numerator_smoothing_penalty=None, hot_start=False,
+                 **hot_start_kwargs):
         """ Initialize base class for Bernstein Approximator
 
             Parameters
@@ -33,6 +36,9 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
         self.domain = [0, 1]
 
         self._legendre_coef = None
+
+        self.hot_start = hot_start
+        self.hot_start_kwargs = hot_start_kwargs
 
     def f(self, X, target_ys, w, grad=False):
         """ Loss function to be minimized with respect to w
@@ -249,3 +255,12 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
             return numerator_val[0] / denominator_val
 
         return [num / denominator_val for num in numerator_val]
+
+    def get_hotstart_w(self, x, target_ys, max_projection_iter=100,
+                        max_fit_iter=2, max_hull_projection_iter=1000):
+
+        stepwise_approximator = StepwiseBernstein(self.n, self.m, max_projection_iter=max_projection_iter,
+                                                  max_fit_iter=max_fit_iter,
+                                                  max_hull_projection_iter=max_hull_projection_iter).fit(x, target_ys)
+
+        return stepwise_approximator.w
