@@ -2,11 +2,11 @@ import numpy as np
 
 from ..RationalApproximator import RationalApproximator
 from ..Polynomials import LegendrePolynomial, BernsteinPolynomial
-from ..validation_checks import check_X_in_range, check_target_ys
+from ..validation_checks import check_target_ys
 
 from ..utils import bernstein_to_legendre_matrix
 
-from . import ConvexHull
+from .. import ConvexHull
 
 
 class StepwiseBernstein(RationalApproximator):
