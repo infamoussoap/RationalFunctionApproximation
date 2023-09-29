@@ -5,6 +5,7 @@ from .LinProgApproximator import LinProgApproximator
 from .QuadProgApproximator import QuadProgApproximator
 from .LinearizedBernstein import LinearizedBernstein
 from .StepwiseBernstein import StepwiseBernstein
+from .MultivariateStepwiseBernstein import MultivariateStepwiseBernstein
 
 from .utils import ignore_warnings
 from .utils import display_warnings
