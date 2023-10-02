@@ -33,9 +33,12 @@ class StepwiseBernstein(RationalApproximator):
 
         self.fit_n_iter_ = 0
         while self.fit_n_iter_ < self.max_fit_iter:
-            requires_projection = self._fit(x, target_ys, weight)
+            support = weight > 0
+
+            requires_projection = self._fit(x[support], [y[support] for y in target_ys], weight[support])
             if requires_projection:
-                self._project_numerator_and_denominator(x, target_ys, weight=weight)
+                self._project_numerator_and_denominator(x[support], [y[support] for y in target_ys],
+                                                        weight=weight[support])
 
             self.fit_n_iter_ += 1
             weight = self.denominator(x)
