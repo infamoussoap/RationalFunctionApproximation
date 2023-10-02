@@ -10,7 +10,7 @@ from ..Polynomials import BernsteinPolynomial, LegendrePolynomial, ChebyshevPoly
 from ..validation_checks import check_bernstein_w, check_X_in_range
 from ..RationalApproximator import RationalApproximator
 
-from .. import StepwiseBernstein
+from .. import StepwiseBernstein, LinearizedBernstein
 
 
 class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
@@ -260,13 +260,25 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
     def get_hotstart_w(self, x, target_ys, max_projection_iter=100,
                         max_fit_iter=2, max_hull_projection_iter=1000):
 
+        has_poles, w = self._get_stepwise_hotstart(x, target_ys, max_projection_iter, max_fit_iter,
+                                                   max_hull_projection_iter)
+        if has_poles:
+            has_poles, w = self._get_linearized_hotstart(x, target_ys, max_fit_iter)
+
+        if has_poles:
+            warnings.warn("Hotstart returned results with poles and so will not be used.")
+            w = np.ones(self.m + 1) / (self.m + 1)
+
+        return w
+
+    def _get_stepwise_hotstart(self, x, target_ys, max_projection_iter=100,
+                               max_fit_iter=2, max_hull_projection_iter=1000):
         stepwise_approximator = StepwiseBernstein(self.n, self.m, max_projection_iter=max_projection_iter,
                                                   max_fit_iter=max_fit_iter,
                                                   max_hull_projection_iter=max_hull_projection_iter).fit(x, target_ys)
 
-        if len(stepwise_approximator.poles()) >= 0:
-            warnings.warn("Stepwise Approximator converged to a function with poles. As such, it's results will "
-                          "not be used for the hotstart.")
-            return np.ones(self.m + 1) / (self.m + 1)
+        return len(stepwise_approximator.poles()) > 0, stepwise_approximator.w
 
-        return stepwise_approximator.w
+    def _get_linearized_hotstart(self, x, target_ys, max_iter):
+        linearized_approximator = LinearizedBernstein(self.n, self.m, max_iter=max_iter).fit(x, target_ys)
+        return len(linearized_approximator.poles()) > 0, linearized_approximator.w
