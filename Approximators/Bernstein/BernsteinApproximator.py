@@ -188,8 +188,11 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
         denominator_val = self.denominator(x, grad=False)
         denominator_grad = self.denominator(x, grad=True)
 
-        grads = [(numerator_grad * denominator_val - numerator_val * denominator_grad) / (denominator_val ** 2)
-                 for (numerator_val, numerator_grad) in zip(numerator_vals, numerator_grads)]
+        if len(self.w) == 1:
+            grads = numerator_grads
+        else:
+            grads = [(numerator_grad * denominator_val - numerator_val * denominator_grad) / (denominator_val ** 2)
+                     for (numerator_val, numerator_grad) in zip(numerator_vals, numerator_grads)]
 
         if len(grads) == 1:
             return grads[0]
