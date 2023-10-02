@@ -1,4 +1,5 @@
 from abc import ABC
+import warnings
 
 import numpy as np
 
@@ -262,5 +263,10 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
         stepwise_approximator = StepwiseBernstein(self.n, self.m, max_projection_iter=max_projection_iter,
                                                   max_fit_iter=max_fit_iter,
                                                   max_hull_projection_iter=max_hull_projection_iter).fit(x, target_ys)
+
+        if len(stepwise_approximator.poles()) >= 0:
+            warnings.warn("Stepwise Approximator converged to a function with poles. As such, it's results will "
+                          "not be used for the hotstart.")
+            return np.ones(self.m + 1) / (self.m + 1)
 
         return stepwise_approximator.w
