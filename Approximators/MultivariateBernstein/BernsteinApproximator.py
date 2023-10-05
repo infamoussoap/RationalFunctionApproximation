@@ -176,7 +176,10 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
                                                               max_fit_iter=max_fit_iter,
                                                               max_hull_projection_iter=max_hull_projection_iter)
 
-        stepwise_approximator.fit(x, target_ys)
+        if len(target_ys) != 1:
+            warnings.warn("Multivariate Stepwise approximator is only programed to fit one function, not multiple. "
+                          "It will only fit the first given function, and the rest are ignored.")
+        stepwise_approximator.fit(x, target_ys[0])
 
         return len(stepwise_approximator.poles()) > 0, stepwise_approximator.w
 
