@@ -1,9 +1,11 @@
 import numpy as np
 import dedalus.public as d3
 
+import time
+
 
 def solve_single_coefficient_bessel(approximator, a, m, Lx=0, Ux=1, Nx=256, dtype=np.double,
-                                    n_eigenvals=20):
+                                    n_eigenvals=20, n_runs=5):
     """ Solves the eigenvalue problem for Bessel's differential equation with a single
         non-constant coefficient
     
@@ -25,6 +27,8 @@ def solve_single_coefficient_bessel(approximator, a, m, Lx=0, Ux=1, Nx=256, dtyp
             Data type to solve the differential equation in
         n_eigenvals : int, default=20
             Number of eigenvalues to compute
+        n_runs : int, default=5
+            Number of times to run the solve to get an average time taken
         
         Returns
         -------
@@ -63,13 +67,20 @@ def solve_single_coefficient_bessel(approximator, a, m, Lx=0, Ux=1, Nx=256, dtyp
     problem.add_equation("u(x=Ux) = 0")
 
     solver = problem.build_solver(max_ncc_terms=None, ncc_cutoff=1e-12)
-    solver.solve_sparse(solver.subproblems[0], N=n_eigenvals, target=0)
     
-    return solver
+    time_taken = []
+    for _ in range(n_runs):
+        start = time.time()
+        solver.solve_sparse(solver.subproblems[0], N=n_eigenvals, target=0)
+        end = time.time()
+        
+        time_taken.append(end - start)
+    
+    return np.mean(time_taken), solver
 
 
 def solve_multiple_coefficient_bessel(approximator, a, m, Lx=0, Ux=np.log(2), Nx=256, dtype=np.double,
-                                      n_eigenvals=20):
+                                      n_eigenvals=20, n_runs=5):
     """ Solves the eigenvalue problem for Bessel's differential equation with multiple
         non-constant coefficients
     
@@ -94,6 +105,8 @@ def solve_multiple_coefficient_bessel(approximator, a, m, Lx=0, Ux=np.log(2), Nx
             Data type to solve the differential equation in
         n_eigenvals : int, default=20
             Number of eigenvalues to compute
+        n_runs : int, default=5
+            Number of times to run the solve to get an average time taken
         
         Returns
         -------
@@ -131,8 +144,15 @@ def solve_multiple_coefficient_bessel(approximator, a, m, Lx=0, Ux=np.log(2), Nx
     problem.add_equation("c1 * uxx + c2 * ux + (k * c3 - (m ** 2) * den) * u = 0")
     problem.add_equation("u(x=Lx) = 0")
     problem.add_equation("u(x=Ux) = 0")
-
-    solver = problem.build_solver(max_ncc_terms=None, ncc_cutoff=1e-12)
-    solver.solve_sparse(solver.subproblems[0], N=n_eigenvals, target=0)
     
-    return solver
+    solver = problem.build_solver(max_ncc_terms=None, ncc_cutoff=1e-12)
+
+    time_taken = []
+    for _ in range(n_runs):
+        start = time.time()
+        solver.solve_sparse(solver.subproblems[0], N=n_eigenvals, target=0)
+        end = time.time()
+        
+        time_taken.append(end - start)
+    
+    return np.mean(time_taken), solver
