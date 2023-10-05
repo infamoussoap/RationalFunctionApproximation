@@ -91,3 +91,18 @@ def MultivariatePolynomial(n_vals, x_vals, polynomial):
         out *= P.reshape(broadcast_shape)
 
     return out
+
+
+def bernstein_edge_locations(n_vals):
+    out = np.zeros([n + 1 for n in n_vals])
+
+    for i, n in enumerate(n_vals):
+        temp = np.zeros(n + 1)
+        temp[0] = 1
+        temp[-1] = 1
+
+        broadcast_shape = [n + 1 if j == i else 1 for j in range(len(n_vals))]
+
+        out += temp.reshape(broadcast_shape)
+
+    return out > 0
