@@ -1,5 +1,5 @@
 from abc import ABC
-import itertools
+import warnings
 
 import numpy as np
 
@@ -8,10 +8,13 @@ from .ArmijoSearch import ArmijoSearch
 from ..Polynomials import MultivariateBernsteinPolynomial, MultivariateLegendrePolynomial
 from ..validation_checks import check_bernstein_w, check_X_in_range
 from ..RationalApproximator import RationalApproximator
+from ..MultivariateStepwiseBernstein import MultivariateStepwiseBernstein
+
+from ..Polynomials import bernstein_edge_locations
 
 
 class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
-    def __init__(self, n_vals, m_vals=None, numerator_smoothing_penalty=None):
+    def __init__(self, n_vals, m_vals=None, numerator_smoothing_penalty=None, hot_start=False):
         self.n_vals = n_vals
         self.m_vals = n_vals if m_vals is None else m_vals
 
@@ -21,6 +24,8 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
         self._legendre_coef = None
 
         self.domain = [0, 1]
+
+        self.hot_start = hot_start
 
     def f(self, X, target_ys, w, grad=False):
         """
@@ -130,28 +135,54 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
             else:
                 assert len(smoothing_penalty) == len(n_vals), "Smoothing penalty must have the same length as numerator"
 
-            coef_weight = BernsteinApproximator.get_smoothing_penalty(n_vals, smoothing_penalty).flatten()
+            coef_weight = BernsteinApproximator.get_smoothing_penalty(n_vals).flatten()
             coef = np.linalg.inv(design_matrix @ design_matrix.T \
-                                 + np.diag(coef_weight)) @ design_matrix @ y[support]
+                                 + smoothing_penalty[0] * np.diag(coef_weight)) @ design_matrix @ y[support]
 
         return coef
 
     @staticmethod
-    def get_smoothing_penalty(n_vals, gammas):
-        index_generator = itertools.product(*[np.arange(n + 1) for n in n_vals])
+    def get_smoothing_penalty(n_vals):
+        penalty = np.ones([n + 1 for n in n_vals])
 
-        penalty = np.zeros([n + 1 for n in n_vals])
-        for n_index in index_generator:
+        for i, n in enumerate(n_vals):
+            target_shape = [1 if l != i else (n + 1) for l in range(len(n_vals))]
 
-            total = 0
-            for i in range(len(n_index)):
-                log_summand = np.log(gammas[i]) - sum([np.log(2 * n + 1) for j, n in enumerate(n_index) if j != i])
+            temp_penalty = np.arange(n + 1) ** np.arange(n + 1)
+            temp_penalty = temp_penalty.reshape(target_shape)
 
-                if n_index[i] > 0:
-                    log_summand += 2 * n_index[i] * np.log(n_index[i])
-
-                total += np.exp(log_summand)
-
-            penalty[n_index] = total
+            penalty *= temp_penalty
 
         return penalty
+
+    def get_hotstart_w(self, x, target_ys, max_projection_iter=100,
+                       max_fit_iter=2, max_hull_projection_iter=1000):
+
+        has_poles, w = self._get_stepwise_hotstart(x, target_ys, max_projection_iter, max_fit_iter,
+                                                   max_hull_projection_iter)
+
+        if has_poles:
+            warnings.warn("Hot-start returned results with poles and so will not be used.")
+
+            M = int(np.prod([m + 1 for m in self.m_vals]))
+            w = np.ones(M) / M
+
+        return w
+
+    def _get_stepwise_hotstart(self, x, target_ys, max_projection_iter=100,
+                               max_fit_iter=2, max_hull_projection_iter=1000):
+        stepwise_approximator = MultivariateStepwiseBernstein(self.n_vals, self.m_vals,
+                                                              max_projection_iter=max_projection_iter,
+                                                              max_fit_iter=max_fit_iter,
+                                                              max_hull_projection_iter=max_hull_projection_iter)
+
+        stepwise_approximator.fit(x, target_ys)
+
+        return len(stepwise_approximator.poles()) > 0, stepwise_approximator.w
+
+    def poles(self):
+        """ Warning: This doesn't return the poles """
+        edge_locations = bernstein_edge_locations(self.m_vals).flatten()
+
+        edge_w = self.w[edge_locations]
+        return edge_w[edge_w < 1e-10]

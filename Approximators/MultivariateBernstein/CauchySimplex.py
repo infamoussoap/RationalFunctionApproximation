@@ -39,7 +39,8 @@ class CauchySimplex(BernsteinApproximator):
     def __init__(self, n_vals, m_vals=None, tol=1e-10, max_iter=100, stopping_tol=1e-6, w=None,
                  c1=1e-4, c2=0.5, line_search_iter=100, gamma=1, verbose=False,
                  early_stopping=False, train_proportion=0.8, patience=10,
-                 numerator_smoothing_penalty=None, denominator_smoothing_penalty=None):
+                 numerator_smoothing_penalty=None, denominator_smoothing_penalty=None,
+                 hot_start=False):
         """ Initialize Cauchy Simplex Optimizer
 
             Parameters
@@ -101,6 +102,8 @@ class CauchySimplex(BernsteinApproximator):
 
         self._writer = WriterToScreen()
 
+        self.hot_start = hot_start
+
     def get_params(self):
         return {
             'n_vals': self.n_vals,
@@ -118,7 +121,8 @@ class CauchySimplex(BernsteinApproximator):
             'train_proportion': self.train_proportion,
             'patience': self.patience,
             'numerator_smoothing_penalty': self.numerator_smoothing_penalty,
-            'denominator_smoothing_penalty': self.denominator_smoothing_penalty
+            'denominator_smoothing_penalty': self.denominator_smoothing_penalty,
+            'hot_start': self.hot_start
         }
 
     def set_params(self, **parameters):
@@ -201,8 +205,12 @@ class CauchySimplex(BernsteinApproximator):
 
             validation_history = []
 
-        self.w = check_bernstein_w(self.w_start, int(np.prod([m + 1 for m in self.m_vals])))
         target_ys = check_target_ys(y)
+
+        if self.hot_start:
+            self.w_start = self.get_hotstart_w(X, target_ys)
+
+        self.w = check_bernstein_w(self.w_start, int(np.prod([m + 1 for m in self.m_vals])))
 
         evaluated_legendre = MultivariateLegendrePolynomial(self.n_vals, X)
         evaluated_legendre = evaluated_legendre.reshape(-1, len(X))

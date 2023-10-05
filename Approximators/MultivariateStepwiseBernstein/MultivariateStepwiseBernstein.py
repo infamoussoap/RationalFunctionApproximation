@@ -7,6 +7,7 @@ from ..validation_checks import check_bernstein_w, check_X_in_range
 from ..RationalApproximator import RationalApproximator
 
 from ..utils import bernstein_to_legendre_matrix
+from ..Polynomials import bernstein_edge_locations
 
 from .. import ConvexHull
 
@@ -78,10 +79,12 @@ class MultivariateStepwiseBernstein(RationalApproximator):
         design_matrix = np.vstack([evaluated_numerator_legendre / weight[None, :],
                                    -y * evaluated_denominator_legendre[1:] / weight[None, :]])
 
-        penalty = self.get_smoothing_penalty(self.n_vals).flatten()
+        numerator_penalty = self.get_smoothing_penalty(self.n_vals).flatten()
+        denominator_penalty = self.get_smoothing_penalty(self.m_vals).flatten()
 
         R = np.zeros_like(design_matrix)
-        R[:len(penalty), :len(penalty)] = np.diag(np.sqrt(penalty))
+        # R[:len(penalty), :len(penalty)] = np.diag(np.sqrt(penalty))
+        R[:, :R.shape[0]] = np.diag(np.concatenate([np.sqrt(numerator_penalty), np.sqrt(denominator_penalty[1:])]))
 
         if self.numerator_smoothing_penalty is not None:
             temp = design_matrix + self.numerator_smoothing_penalty * R
@@ -131,9 +134,6 @@ class MultivariateStepwiseBernstein(RationalApproximator):
         return coef
 
     def _project_denominator(self, X, y, weight):
-        y = y - np.min(y) + 1
-        y = y / np.max(y)
-
         A = MultivariateBernsteinPolynomial(self.m_vals, X).reshape(-1, len(X)) * (y / weight)[None, :]
         target = self.numerator(X) / weight
 
@@ -207,3 +207,10 @@ class MultivariateStepwiseBernstein(RationalApproximator):
         check_X_in_range(x, 0, 1)
 
         return self.numerator(x) / self.denominator(x)
+
+    def poles(self):
+        """ Warning: This doesn't return the poles """
+        edge_locations = bernstein_edge_locations(self.m_vals).flatten()
+
+        edge_w = self.w[edge_locations]
+        return edge_w[edge_w < 1e-10]
