@@ -261,16 +261,24 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
         return [num / denominator_val for num in numerator_val]
 
     def get_hotstart_w(self, x, target_ys, max_projection_iter=100,
-                        max_fit_iter=2, max_hull_projection_iter=1000):
+                       max_fit_iter=2, max_hull_projection_iter=1000):
 
-        has_poles, w = self._get_stepwise_hotstart(x, target_ys, max_projection_iter, max_fit_iter,
-                                                   max_hull_projection_iter)
-        if has_poles:
-            has_poles, w = self._get_linearized_hotstart(x, target_ys, max_fit_iter)
+        stepwise_has_poles, stepwise_w, stepwise_error = self._get_stepwise_hotstart(x, target_ys, max_projection_iter,
+                                                                                     max_fit_iter,
+                                                                                     max_hull_projection_iter)
 
-        if has_poles:
-            warnings.warn("Hotstart returned results with poles and so will not be used.")
-            w = np.ones(self.m + 1) / (self.m + 1)
+        linearized_has_poles, linearized_w, linearized_error = self._get_stepwise_hotstart(x, target_ys,
+                                                                                           max_projection_iter,
+                                                                                           max_fit_iter,
+                                                                                           max_hull_projection_iter)
+
+        if (not stepwise_has_poles) and (not linearized_has_poles):
+            return stepwise_w if stepwise_error < linearized_error else linearized_w
+        elif (not stepwise_has_poles) or (not linearized_has_poles):
+            return stepwise_w if linearized_has_poles else linearized_w
+
+        warnings.warn("Hotstart returned results with poles and so will not be used.")
+        w = np.ones(self.m + 1) / (self.m + 1)
 
         return w
 
@@ -280,8 +288,15 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
                                                   max_fit_iter=max_fit_iter,
                                                   max_hull_projection_iter=max_hull_projection_iter).fit(x, target_ys)
 
-        return len(stepwise_approximator.poles()) > 0, stepwise_approximator.w
+        error = self.f(x, target_ys, stepwise_approximator.w)
+        return len(stepwise_approximator.poles()) > 0, stepwise_approximator.w, error
 
     def _get_linearized_hotstart(self, x, target_ys, max_iter):
-        linearized_approximator = LinearizedBernstein(self.n, self.m, max_iter=max_iter).fit(x, target_ys)
-        return len(linearized_approximator.poles()) > 0, linearized_approximator.w
+        try:
+            linearized_approximator = LinearizedBernstein(self.n, self.m, max_iter=max_iter).fit(x, target_ys)
+        except:
+            # Cvxopt will raise an error if the problem isn't well conditioned
+            return True, None, None
+        else:
+            error = self.f(x, target_ys, linearized_approximator.w)
+            return len(linearized_approximator.poles()) > 0, linearized_approximator.w, error
