@@ -7,7 +7,7 @@ from .ArmijoSearch import ArmijoSearch
 
 from ..utils import bernstein_to_legendre_matrix, bernstein_to_chebyshev_matrix
 from ..Polynomials import BernsteinPolynomial, LegendrePolynomial, ChebyshevPolynomial
-from ..validation_checks import check_bernstein_w, check_X_in_range
+from ..validation_checks import check_bernstein_w, check_X_in_range, check_target_ys
 from ..RationalApproximator import RationalApproximator
 
 from .. import StepwiseBernstein, LinearizedBernstein
@@ -262,6 +262,7 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
 
     def get_hotstart_w(self, x, target_ys, max_projection_iter=100,
                        max_fit_iter=2, max_hull_projection_iter=1000):
+        target_ys = check_target_ys(target_ys)
 
         stepwise_has_poles, stepwise_w, stepwise_error = self._get_stepwise_hotstart(x, target_ys, max_projection_iter,
                                                                                      max_fit_iter,
