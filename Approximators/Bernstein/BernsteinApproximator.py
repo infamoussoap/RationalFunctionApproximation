@@ -267,10 +267,8 @@ class BernsteinApproximator(ArmijoSearch, RationalApproximator, ABC):
                                                                                      max_fit_iter,
                                                                                      max_hull_projection_iter)
 
-        linearized_has_poles, linearized_w, linearized_error = self._get_stepwise_hotstart(x, target_ys,
-                                                                                           max_projection_iter,
-                                                                                           max_fit_iter,
-                                                                                           max_hull_projection_iter)
+        linearized_has_poles, linearized_w, linearized_error = self._get_linearized_hotstart(x, target_ys,
+                                                                                             max_fit_iter)
 
         if (not stepwise_has_poles) and (not linearized_has_poles):
             return stepwise_w if stepwise_error < linearized_error else linearized_w
