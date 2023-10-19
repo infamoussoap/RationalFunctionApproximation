@@ -1,6 +1,6 @@
 # Rational Function Approximation with Positive-Normalized Denominators
 This repository contains the code for our paper 
-Rational Function Approximation with Positive-Normalized Denominators
+[Rational Function Approximation with Positive-Normalized Denominators](https://arxiv.org/abs/2310.12053).
 It has usable code for rational function approximation using existing methods
 like the AAA and SK algorithms, as well as our new
 <I>Rational Bernstein Denominator algorithm</I>. It also contains
