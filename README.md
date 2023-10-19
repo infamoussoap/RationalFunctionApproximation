@@ -29,7 +29,7 @@ approximations, beating spline-based methods.
 ## Differential Equations
 Consider the following differential equation
 $$y'' + p(x)y' + q(x)y = f(x),\quad\text{for}\quad x\in[0,1].$$
-Numerical spectral solvers solve such a differential equation by 
+Numerical spectral solvers, like [Dedalus](https://dedalus-project.readthedocs.io/en/latest/), solve such a differential equation by 
 approximating the non-constant coefficients, $p(x)$ and $q(x)$,
 as a polynomial. Importantly, the space and time complexity
 of numerical spectral solvers grow with respect to the degree
